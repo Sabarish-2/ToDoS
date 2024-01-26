@@ -1,0 +1,22 @@
+<resources xmlns:tools="http://schemas.android.com/tools">
+    <!-- Base application theme. -->
+    <style name="Base.Theme.ToDoSApp" parent="Theme.Material3.DayNight.NoActionBar">
+        <!-- Customize your dark theme here. -->
+         <item name="colorPrimary">@color/gold_grey</item>
+    </style>
+
+    <!-- For Add_Edit Dialog Box -->
+    <style name="DIALOG">
+        <item name="android:background">#5A4600</item>
+    </style>
+
+    <style name="DIALOG_TEXT">
+        <item name="android:textColor">#C3B08D</item>
+    </style>
+
+    <style name="DIALOG_Button">
+        <item name="android:textColor">#392C20</item>
+        <item name="backgroundTint">#B88C14</item>
+    </style>
+
+</resources>

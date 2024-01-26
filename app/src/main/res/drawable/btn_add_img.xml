@@ -1,0 +1,24 @@
+<?xml version="1.0" encoding="utf-8"?>
+<layer-list xmlns:android="http://schemas.android.com/apk/res/android">
+
+    <!-- Horizontal line (top) -->
+    <item android:left="16dp" android:right="16dp">
+        <rotate android:fromDegrees="90">
+        <shape android:shape="line">
+            <stroke android:width="8dp"
+                android:color="#000000"/>
+        </shape>
+        </rotate>
+    </item>
+
+    <!-- Vertical line (left) -->
+    <item android:left="16dp" android:right="16dp">
+        <shape android:shape="line">
+            <stroke android:width="8dp"
+                android:color="#000000"/>
+        </shape>
+    </item>
+
+</layer-list>
+
+

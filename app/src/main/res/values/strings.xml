@@ -1,0 +1,8 @@
+<resources>
+    <string name="app_name">ToDoSApp</string>
+    <string name="btn_add_description">Add New task</string>
+    <string name="tasks_complete_text">You Have Completed All Your Tasks</string>
+    <string name="new_task_dialog">New Task</string>
+    <string name="task_name_dialog">Task name</string>
+    <string name="add_task_dialog">Add Task</string>
+</resources>
