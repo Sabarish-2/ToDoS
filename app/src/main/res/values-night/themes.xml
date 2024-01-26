@@ -1,4 +1,4 @@
-<resources xmlns:tools="http://schemas.android.com/tools">
+<resources>
     <!-- Base application theme. -->
     <style name="Base.Theme.ToDoSApp" parent="Theme.Material3.DayNight.NoActionBar">
         <!-- Customize your dark theme here. -->
@@ -14,9 +14,14 @@
         <item name="android:textColor">#C3B08D</item>
     </style>
 
-    <style name="DIALOG_Button">
-        <item name="android:textColor">#392C20</item>
-        <item name="backgroundTint">#B88C14</item>
+    <style name="DIALOG_BUTTON">
+        <item name="android:textColor">#291C10</item>
+        <item name="backgroundTint">#B68C10</item>
+    </style>
+
+    <style name="DIALOG_DEL_BUTTON">
+        <item name="backgroundTint">#CA2B1E</item>
+        <item name="android:textColor">#B8B5B5</item>
     </style>
 
 </resources>

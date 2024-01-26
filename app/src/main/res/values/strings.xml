@@ -5,4 +5,7 @@
     <string name="new_task_dialog">New Task</string>
     <string name="task_name_dialog">Task name</string>
     <string name="add_task_dialog">Add Task</string>
+    <string name="edit_task">Edit Task</string>
+    <string name="btn_delete_task">Delete Task</string>
+    <string name="btn_set_name">Set Name</string>
 </resources>
