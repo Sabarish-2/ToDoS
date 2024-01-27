@@ -15,13 +15,13 @@
     </style>
 
     <style name="DIALOG_BUTTON">
-        <item name="android:textColor">#DA7</item>
+        <item name="android:textColor">#FFFFFF</item>
         <item name="backgroundTint">#221A04</item>
     </style>
 
     <style name="DIALOG_DEL_BUTTON">
         <item name="backgroundTint">#F32</item>
-        <item name="android:textColor">#FCC</item>
+        <item name="android:textColor">#FFFFFF</item>
     </style>
 
     <style name="Theme.ToDoSApp" parent="Base.Theme.ToDoSApp" />

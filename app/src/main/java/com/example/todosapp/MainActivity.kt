@@ -87,7 +87,6 @@ class MainActivity : AppCompatActivity() {
         val cbLayout = findViewById<LinearLayout>(R.id.cbLayout)
         val checkBox = CheckBox(this)
         checkBox.text = taskName
-        checkBox.id = View.generateViewId()
         val layoutParams = LinearLayout.LayoutParams(
             LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT
         )
@@ -95,7 +94,8 @@ class MainActivity : AppCompatActivity() {
         checkBox.layoutParams = layoutParams
         checkBox.setOnClickListener {
             if (checkBox.isChecked) {
-                db.doneTask(taskName, checkBox.id)
+        //        checkBox.id = View.generateViewId()
+                db.doneTask(taskName)
                 removeTaskCheck(cbLayout, checkBox)
             }
         }
@@ -119,7 +119,7 @@ class MainActivity : AppCompatActivity() {
                 requestFocus(edtTaskName)
             }
             btnDelDialog.setOnClickListener {
-                db.delTask(taskName, checkBox.id, 0)
+                db.delTask(taskName, 0)
                 removeTaskCheck(cbLayout, checkBox)
                 add.dismiss()
             }
@@ -130,7 +130,7 @@ class MainActivity : AppCompatActivity() {
                     toast.show()
                 } else {
                     checkBox.text = text
-                    db.editTask(taskName, checkBox.id, 0, text)
+                    db.editTask(taskName, 0, text)
                     taskName = text
                 }
                 add.dismiss()
@@ -140,7 +140,7 @@ class MainActivity : AppCompatActivity() {
 
         if (newTask) {
             tasks++
-            db.addTask(taskName, checkBox.id)
+            checkBox.id = db.addTask(taskName)
         }
         cbLayout?.addView(checkBox)
         noTaskChecker()
