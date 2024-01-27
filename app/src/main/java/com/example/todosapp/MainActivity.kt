@@ -21,7 +21,9 @@ import androidx.core.view.setMargins
 class MainActivity : AppCompatActivity() {
 
     private var tasks: Int = 0
-    private val db = LocalDB(this)
+    private val db :LocalDB by lazy {
+         LocalDB.getDB(this)
+    }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -29,7 +31,7 @@ class MainActivity : AppCompatActivity() {
 
         val btnAdd =
             findViewById<com.google.android.material.floatingactionbutton.FloatingActionButton>(R.id.btnAdd)
-        val task = db.fetchTask()
+        val task = db.taskDao().allTask
         for (i in task) {
             if (i.status == 0) {
                 tasks++
@@ -94,8 +96,10 @@ class MainActivity : AppCompatActivity() {
         checkBox.layoutParams = layoutParams
         checkBox.setOnClickListener {
             if (checkBox.isChecked) {
-        //        checkBox.id = View.generateViewId()
-                db.doneTask(taskName)
+//                db.doneTask(taskName)
+                val id = if (checkBox.id > 0) checkBox.id else db.taskDao().getTaskId(taskName, 0)
+                val new = Task(id, taskName, 1)
+                db.taskDao().editTask(new)
                 removeTaskCheck(cbLayout, checkBox)
             }
         }
@@ -119,7 +123,10 @@ class MainActivity : AppCompatActivity() {
                 requestFocus(edtTaskName)
             }
             btnDelDialog.setOnClickListener {
-                db.delTask(taskName, 0)
+//                db.delTask(taskName, 0)
+                val id = if (checkBox.id > 0) checkBox.id else (db.taskDao().getTaskId(taskName, 0))
+                val new = Task(id, taskName, 0)
+                db.taskDao().delTask(new)
                 removeTaskCheck(cbLayout, checkBox)
                 add.dismiss()
             }
@@ -130,7 +137,9 @@ class MainActivity : AppCompatActivity() {
                     toast.show()
                 } else {
                     checkBox.text = text
-                    db.editTask(taskName, 0, text)
+                    val id = if (checkBox.id > 0) checkBox.id else (db.taskDao().getTaskId(taskName, 0))
+                    val new = Task(id, text,0)
+                    db.taskDao().editTask(new)
                     taskName = text
                 }
                 add.dismiss()
@@ -140,7 +149,10 @@ class MainActivity : AppCompatActivity() {
 
         if (newTask) {
             tasks++
-            checkBox.id = db.addTask(taskName)
+            val new = Task(taskName, 0)
+            db.taskDao().addTask(new)
+            checkBox.id = db.taskDao().getTaskId(taskName, 0)
+//            checkBox.id = db.addTask(taskName)
         }
         cbLayout?.addView(checkBox)
         noTaskChecker()
