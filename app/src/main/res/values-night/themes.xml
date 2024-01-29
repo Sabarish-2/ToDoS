@@ -24,4 +24,8 @@
         <item name="backgroundTint">#CA2B1E</item>
     </style>
 
+    <style name="BTN_TOOLBAR">
+        <item name="iconTint">@color/white</item>
+    </style>
+
 </resources>

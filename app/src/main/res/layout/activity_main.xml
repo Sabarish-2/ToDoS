@@ -1,20 +1,40 @@
 <?xml version="1.0" encoding="utf-8"?>
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    xmlns:app="http://schemas.android.com/apk/res-auto"
     tools:context=".MainActivity">
 
+<!--        android:layout_margin="16dp"-->
     <LinearLayout
         android:id="@+id/cbLayout"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:layout_margin="16dp"
         android:orientation="vertical">
-<!--        android:layout_marginTop="16dp"-->
-<!--        android:layout_marginEnd="16dp"-->
-<!--        android:layout_marginBottom="16dp"-->
+        <!--        android:layout_marginTop="16dp"-->
+        <!--        android:layout_marginEnd="16dp"-->
+        <!--        android:layout_marginBottom="16dp"-->
+        <com.google.android.material.appbar.AppBarLayout
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content">
+
+<!--            style="@style/BTN_TOOLBAR"-->
+        <androidx.appcompat.widget.Toolbar
+            android:id="@+id/toolBar"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content">
+<!--            android:background="@color/gold"-->
+
+<!--            <LinearLayout-->
+<!--                android:layout_width="match_parent"-->
+<!--                android:layout_height="match_parent">-->
+<!--                -->
+<!--            </LinearLayout>-->
+        </androidx.appcompat.widget.Toolbar>
+
+    </com.google.android.material.appbar.AppBarLayout>
+
 
         <TextView
             android:id="@+id/textNoTasks"
@@ -27,6 +47,7 @@
             android:textSize="20sp"
             android:visibility="gone" />
     </LinearLayout>
+
     <com.google.android.material.floatingactionbutton.FloatingActionButton
         android:id="@+id/btnAdd"
         android:layout_width="wrap_content"
@@ -38,5 +59,5 @@
         android:src="@drawable/btn_add_img"
         app:maxImageSize="76dp" />
 
-<!--        android:focusable="true"-->
+    <!--        android:focusable="true"-->
 </RelativeLayout>

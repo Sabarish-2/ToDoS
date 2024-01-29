@@ -24,5 +24,9 @@
         <item name="android:textColor">#FFFFFF</item>
     </style>
 
+    <style name="BTN_TOOLBAR">
+        <item name="iconTint">@color/black</item>
+    </style>
+
     <style name="Theme.ToDoSApp" parent="Base.Theme.ToDoSApp" />
 </resources>

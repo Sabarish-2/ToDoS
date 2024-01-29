@@ -5,8 +5,6 @@ import androidx.room.Entity;
 import androidx.room.Ignore;
 import androidx.room.PrimaryKey;
 
-//    public static final String TABLE_TASK = "task";
-
 @Entity(tableName = "task")
 public class Task {
     @PrimaryKey(autoGenerate = true)
