@@ -11,24 +11,23 @@ import android.view.MenuItem
 import android.view.View
 import android.view.inputmethod.InputMethodManager
 import android.widget.Button
-import android.widget.CheckBox
 import android.widget.EditText
-import android.widget.LinearLayout
 import android.widget.TextView
 import android.widget.Toast
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.WindowInsetsCompat
-import androidx.core.view.setMargins
+import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 
 class MainActivity : AppCompatActivity() {
 
-    private var tasks: Int = 0
     private val db: LocalDB by lazy {
         LocalDB.getDB(this)
     }
-
+    private lateinit var recyclerView: RecyclerView
+    private lateinit var recyclerAdapter: RecyclerTaskAdapter
     private lateinit var toolBar: androidx.appcompat.widget.Toolbar
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -44,30 +43,84 @@ class MainActivity : AppCompatActivity() {
 
         val btnAdd =
             findViewById<FloatingActionButton>(R.id.btnAdd)
-        val task = db.taskDao().allTask
-        for (i in task) {
-            if (i.status == 0) {
-                tasks++
-                checkBox(i.name, false)
-            }
-        }
-        if (task.isEmpty()) {
-            checkBox(
-                "Hey, Create Your First task By Clicking on the Plus Below!",
-                true
-            )
-            checkBox(
-                "Mark Your Tasks as Done by marking them tick!!",
-                true
-            )
-            checkBox("Also Edit them with a Long Press!!!", true)
-        }
-        noTaskChecker()
+        showTasks(0)
         btnAdd.setOnClickListener {
             newTask()
-            noTaskChecker()
         }
     }
+
+    override fun onResume() {
+        showTasks(0)
+        super.onResume()
+    }
+
+    fun showTasks(taskStatus: Int) {
+        val arrTask = ArrayList<TaskModel>()
+        recyclerView = findViewById(R.id.recyclerView)
+        recyclerAdapter = RecyclerTaskAdapter(this, arrTask)
+        recyclerView.layoutManager = LinearLayoutManager(this)
+        recyclerView.adapter = recyclerAdapter
+        val task = db.taskDao().allTask
+        for (i in task) {
+            if (i.status == taskStatus) {
+                arrTask.add(TaskModel(R.drawable.no_tick_box, i.name, i.description, i.id))
+            }
+        }
+        if (task.size == 0) {
+            db.taskDao().addTask(Task(-1, "name", null, -1))
+            db.taskDao().addTask(
+                Task(
+                    1,
+                    "Hey, create your first task by clicking on the plus sign at the bottom right corner!",
+                    "And add a description, although it is optional.",
+                    0
+                )
+            )
+            db.taskDao().addTask(
+                Task(
+                    2, "Mark your tasks as done or undone by tapping on them!", null, 0
+                )
+            )
+            db.taskDao().addTask(
+                Task(
+                    3,
+                    "You can also edit or delete them with a long press.",
+                    "Note that the above task doesn't have description.",
+                    0
+                )
+            )
+            db.taskDao().addTask(
+                Task(
+                    4,
+                    "Check the tasks you marked as done in the 'Done' section.",
+                    "Go to the 'Done' Section by tapping on the tick mark in the top right corner.",
+                    0
+                )
+            )
+            db.taskDao().addTask(
+                Task(
+                    5,
+                    "Mark a task as Undone by taping on it. You can delete it there!",
+                    null,
+                    1
+                )
+            )
+        }
+        val textNoTasks = findViewById<TextView>(R.id.textNoTasks)
+        if (arrTask.size == 0) {
+            textNoTasks.visibility = View.VISIBLE
+            recyclerView.visibility = View.GONE
+            val textNoTaskBut1 : String = if (task.size == 1)
+                "Start adding more tasks!"
+            else
+                getText(R.string.tasks_complete_text).toString()
+            textNoTasks.text = textNoTaskBut1
+        } else {
+            recyclerView.visibility = View.VISIBLE
+            textNoTasks.visibility = View.GONE
+        }
+    }
+
 
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
         menuInflater.inflate(R.menu.opt_toolbar, menu)
@@ -91,6 +144,7 @@ class MainActivity : AppCompatActivity() {
         add.show()
         val btnAddDialog = add.findViewById<Button>(R.id.btnAddDialog)
         val edtTaskName = add.findViewById<EditText>(R.id.edtTaskName)
+        val edtTaskDescription = add.findViewById<EditText>(R.id.edtTaskDescription)
         if (Build.VERSION.SDK_INT >= VERSION_CODES.R) {
             requestFocusNew(edtTaskName)
         } else {
@@ -98,115 +152,33 @@ class MainActivity : AppCompatActivity() {
         }
         btnAddDialog.setOnClickListener {
             val text = edtTaskName.text.toString()
+            val desc = edtTaskDescription.text.toString()
+            val status = 0
             if (text.isBlank()) {
-                add.dismiss()
                 val toast = Toast.makeText(this, "Task Name is needed!", Toast.LENGTH_SHORT)
                 toast.show()
             } else {
-                checkBox(edtTaskName.text.toString(), true)
-            }
-            add.dismiss()
-        }
-    }
-
-    private fun checkBox(
-        taskName1: String,
-        newTask: Boolean
-    ) {
-        var taskName = taskName1
-        val cbLayout = findViewById<LinearLayout>(R.id.cbLayout)
-        val checkBox = CheckBox(this)
-        checkBox.text = taskName
-        val layoutParams = LinearLayout.LayoutParams(
-            LinearLayout.LayoutParams.WRAP_CONTENT, LinearLayout.LayoutParams.WRAP_CONTENT
-        )
-        layoutParams.setMargins(24)
-        checkBox.layoutParams = layoutParams
-        checkBox.setOnClickListener {
-            if (checkBox.isChecked) {
-                val id = if (checkBox.id > 0) checkBox.id else db.taskDao().getTaskId(taskName, 0)
-                val new = Task(id, taskName, 1)
-                db.taskDao().editTask(new)
-                removeTaskCheck(cbLayout, checkBox)
-            }
-        }
-        checkBox.setOnLongClickListener {
-            val add = Dialog(this)
-            add.setContentView(R.layout.add_edit_task)
-
-            val txtDialog = add.findViewById<TextView>(R.id.txtDialog)
-            txtDialog.text = getString(R.string.edit_task)
-
-            add.show()
-            val btnAddDialog = add.findViewById<Button>(R.id.btnAddDialog)
-            val btnDelDialog = add.findViewById<Button>(R.id.btnDelDialog)
-            val edtTaskName = add.findViewById<EditText>(R.id.edtTaskName)
-            edtTaskName.setText(taskName)
-            btnAddDialog.text = getString(R.string.btn_set_name)
-            btnDelDialog.visibility = View.VISIBLE
-            if (Build.VERSION.SDK_INT >= VERSION_CODES.R) {
-                requestFocusNew(edtTaskName)
-            } else {
-                requestFocus(edtTaskName)
-            }
-            btnDelDialog.setOnClickListener {
-                val id = if (checkBox.id > 0) checkBox.id else (db.taskDao().getTaskId(taskName, 0))
-                val new = Task(id, taskName, 0)
-                db.taskDao().delTask(new)
-                removeTaskCheck(cbLayout, checkBox)
+                if (desc.isBlank())
+                    db.taskDao().addTask(Task(text, status))
+                else
+                    db.taskDao().addTask(Task(text, desc, status))
+                showTasks(0)
                 add.dismiss()
             }
-            btnAddDialog.setOnClickListener {
-                val text = edtTaskName.text.toString()
-                if (text.isBlank()) {
-                    val toast = Toast.makeText(this, "Task Name is Needed!", Toast.LENGTH_SHORT)
-                    toast.show()
-                } else {
-                    checkBox.text = text
-                    val id =
-                        if (checkBox.id > 0) checkBox.id else (db.taskDao().getTaskId(taskName, 0))
-                    val new = Task(id, text, 0)
-                    db.taskDao().editTask(new)
-                    taskName = text
-                }
-                add.dismiss()
-            }
-            true
         }
-
-        if (newTask) {
-            tasks++
-            val new = Task(taskName, 0)
-            db.taskDao().addTask(new)
-            checkBox.id = db.taskDao().getTaskId(taskName, 0)
-        }
-        cbLayout?.addView(checkBox)
-        noTaskChecker()
-    }
-
-    private fun removeTaskCheck(cbLayout: LinearLayout?, newCheckBox: CheckBox) {
-        cbLayout?.removeView(newCheckBox)
-        tasks--
-        noTaskChecker()
     }
 
     @RequiresApi(VERSION_CODES.R)
-    private fun requestFocusNew(edtTaskName: EditText) {
+    fun requestFocusNew(edtTaskName: EditText) {
         edtTaskName.requestFocus()
         edtTaskName.windowInsetsController?.show(WindowInsetsCompat.Type.ime())
     }
 
-    private fun requestFocus(edtTaskName: EditText) {
+    fun requestFocus(edtTaskName: EditText) {
         edtTaskName.requestFocus()
         // Show the keyboard
         val inputMethodManager =
             getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
         inputMethodManager.showSoftInput(edtTaskName, InputMethodManager.SHOW_IMPLICIT)
-    }
-
-    private fun noTaskChecker() {
-        val textNoTasks = findViewById<TextView>(R.id.textNoTasks)
-        if (tasks == 0) textNoTasks.visibility = View.VISIBLE
-        else textNoTasks.visibility = View.GONE
     }
 }

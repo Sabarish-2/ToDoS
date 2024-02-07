@@ -1,13 +1,15 @@
 <resources>
     <string name="app_name">ToDoSApp</string>
     <string name="btn_add_description">Add New task</string>
-    <string name="tasks_complete_text">You Have Completed All Your Tasks</string>
     <string name="new_task_dialog">New Task</string>
     <string name="task_name_dialog">Task name</string>
     <string name="add_task_dialog">Add Task</string>
     <string name="edit_task">Edit Task</string>
     <string name="btn_delete_task">Delete Task</string>
-    <string name="btn_set_name">Set Name</string>
+    <string name="btn_done">Done</string>
     <string name="done_section_toolbar">Done Section</string>
-    <string name="txt_task_incomplete">Start Completing Your Tasks!</string>
+    <string name="tasks_complete_text">You have completed all your tasks!</string>
+    <string name="txt_task_incomplete">Start completing your tasks!</string>
+    <string name="task_description_dialog">Task Description (optional)</string>
+    <string name="tick_mark_description">Tick Mark for Task completion status</string>
 </resources>

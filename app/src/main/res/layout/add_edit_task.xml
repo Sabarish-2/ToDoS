@@ -1,27 +1,27 @@
 <?xml version="1.0" encoding="utf-8"?>
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    style="@style/DIALOG"
     android:layout_width="wrap_content"
     android:layout_height="wrap_content"
-    android:minHeight="200dp"
-    android:minWidth="300dp"
-    style="@style/DIALOG"
-    android:orientation="vertical"
     android:layout_gravity="center"
-    android:gravity="center">
-<!--    android:layout_margin="20dp"-->
-<!--    android:background="#FFC700"-->
+    android:gravity="center"
+    android:minWidth="300dp"
+    android:minHeight="200dp"
+    android:orientation="vertical">
+    <!--    android:layout_margin="20dp"-->
+    <!--    android:background="#FFC700"-->
 
     <TextView
+        android:id="@+id/txtDialog"
+        style="@style/DIALOG_TEXT"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="center"
         android:layout_marginTop="12dp"
         android:text="@string/new_task_dialog"
         android:textSize="32sp"
-        style="@style/DIALOG_TEXT"
-        android:id="@+id/txtDialog"
         android:textStyle="bold" />
-<!--        android:textColor="@color/gold_grey"-->
+    <!--        android:textColor="@color/gold_grey"-->
 
     <EditText
         android:id="@+id/edtTaskName"
@@ -29,47 +29,86 @@
         android:layout_height="48dp"
         android:layout_gravity="center"
         android:layout_marginHorizontal="12dp"
-        android:layout_marginVertical="20dp"
+        android:layout_marginTop="20dp"
+        android:autofillHints="none"
         android:ems="30"
         android:focusable="true"
         android:focusableInTouchMode="true"
-        android:hint="@string/task_name_dialog"
-        android:inputType="text"
-        android:autofillHints="none" />
+        android:hint= "@string/task_name_dialog"
+        android:inputType="text" />
+
+    <EditText
+        android:id="@+id/edtTaskDescription"
+        android:layout_width="match_parent"
+        android:layout_height="80dp"
+        android:layout_gravity="center"
+        android:layout_marginHorizontal="12dp"
+        android:autofillHints="none"
+        android:ems="30"
+        android:focusable="true"
+        android:focusableInTouchMode="true"
+        android:hint="@string/task_description_dialog"
+        android:inputType="textMultiLine"
+        android:lines="3" />
+
+    <LinearLayout
+        android:visibility="gone"
+        android:layout_width="match_parent"
+        android:layout_height="wrap_content"
+        android:layout_marginVertical="8dp"
+        android:gravity="center">
+
+        <TextView
+            android:id="@+id/txtReminder"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center_vertical"
+            android:layout_marginHorizontal="12dp"
+            android:gravity="center_vertical"
+            android:text="Hello"
+            android:textSize="32sp" />
+
+        <Button
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            style="@style/DIALOG_BUTTON"
+            android:backgroundTint="#926"
+            android:text="Set Reminder"/>
+    </LinearLayout>
 
     <LinearLayout
         android:layout_width="wrap_content"
-        android:minWidth="100dp"
-        android:layout_height="wrap_content">
-
-    <Button
-        android:id="@+id/btnDelDialog"
-        style="@style/DIALOG_DEL_BUTTON"
-        android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:minHeight="52dp"
-        android:layout_gravity="center"
-        android:layout_marginBottom="8dp"
-        android:layout_marginHorizontal="10dp"
-        android:text="@string/btn_delete_task"
-        android:visibility="gone" />
+        android:minWidth="100dp">
+
+        <Button
+            android:id="@+id/btnDelDialog"
+            style="@style/DIALOG_DEL_BUTTON"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:layout_marginHorizontal="10dp"
+            android:layout_marginBottom="8dp"
+            android:minHeight="52dp"
+            android:text="@string/btn_delete_task"
+            android:visibility="gone" />
 
 
-    <Button
-        android:id="@+id/btnAddDialog"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:minHeight="52dp"
-        android:layout_gravity="center"
-        android:layout_marginBottom="8dp"
-        android:layout_marginHorizontal="10dp"
-        android:text="@string/add_task_dialog"
-        style="@style/DIALOG_BUTTON"
-        android:visibility="visible" />
+        <Button
+            android:id="@+id/btnAddDialog"
+            style="@style/DIALOG_BUTTON"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:layout_marginHorizontal="10dp"
+            android:layout_marginBottom="8dp"
+            android:minHeight="52dp"
+            android:text="@string/add_task_dialog"
+            android:visibility="visible" />
     </LinearLayout>
 
     <!--        android:backgroundTint="#221A04"-->
-<!--        android:textColor="#DA7"-->
+    <!--        android:textColor="#DA7"-->
 
 
 </LinearLayout>
