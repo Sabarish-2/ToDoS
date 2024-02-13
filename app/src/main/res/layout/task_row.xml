@@ -17,18 +17,18 @@
             android:layout_width="match_parent"
             android:layout_height="wrap_content">
 
-
             <LinearLayout
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
+                android:layout_marginEnd="28dp"
                 android:gravity="center">
 
                 <ImageView
                     android:id="@+id/im_tick_box"
-                    android:layout_width="40dp"
-                    android:layout_height="40dp"
+                    android:layout_width="30dp"
+                    android:layout_height="30dp"
                     android:layout_gravity="center_vertical|top"
-                    android:layout_margin="8dp"
+                    android:layout_margin="12dp"
                     android:contentDescription="@string/tick_mark_description"
                     android:src="@drawable/no_tick_box" />
                 <!--                android:layout_marginBottom="20dp"-->
@@ -62,18 +62,13 @@
             </LinearLayout>
 
             <TextView
+                android:id="@+id/txt_due_date"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
                 android:layout_alignParentEnd="true"
                 android:layout_centerVertical="true"
-                android:layout_marginStart="12dp"
-
-                android:layout_marginTop="12dp"
-                android:layout_marginEnd="12dp"
-                android:layout_marginBottom="12dp"
-                android:visibility="gone"
-                android:text="Hgh" />
-            <!--                android:visibility="gone"-->
+                android:layout_margin="12dp"
+                android:visibility="gone"/>
 
         </RelativeLayout>
 

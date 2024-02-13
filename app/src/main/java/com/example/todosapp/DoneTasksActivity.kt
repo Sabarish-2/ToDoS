@@ -40,7 +40,7 @@ class DoneTasksActivity : AppCompatActivity() {
         val task = db.taskDao().allTask
         for (i in task) {
             if (i.status == taskStatus) {
-                arrTask.add(TaskModel(R.drawable.tick_box, i.name, i.description, i.id))
+                arrTask.add(TaskModel(R.drawable.tick_box, i.name, i.description, i.id, i.dueDate))
             }
         }
         val textNoTasks = findViewById<TextView>(R.id.textNoTasks)

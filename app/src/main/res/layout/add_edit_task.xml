@@ -52,7 +52,6 @@
         android:lines="3" />
 
     <LinearLayout
-        android:visibility="gone"
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_marginVertical="8dp"
@@ -65,20 +64,22 @@
             android:layout_gravity="center_vertical"
             android:layout_marginHorizontal="12dp"
             android:gravity="center_vertical"
-            android:text="Hello"
-            android:textSize="32sp" />
+            android:visibility="gone"
+            android:textSize="20sp"/>
 
         <Button
+            android:id="@+id/btn_set_due"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             style="@style/DIALOG_BUTTON"
-            android:backgroundTint="#926"
-            android:text="Set Reminder"/>
+            android:backgroundTint="#50B"
+            android:text="@string/set_due_date"/>
     </LinearLayout>
 
     <LinearLayout
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
+        android:layout_marginTop="8dp"
         android:minWidth="100dp">
 
         <Button
@@ -106,9 +107,5 @@
             android:text="@string/add_task_dialog"
             android:visibility="visible" />
     </LinearLayout>
-
-    <!--        android:backgroundTint="#221A04"-->
-    <!--        android:textColor="#DA7"-->
-
 
 </LinearLayout>

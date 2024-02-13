@@ -1,5 +1,6 @@
 package com.example.todosapp
 
+import android.app.DatePickerDialog
 import android.app.Dialog
 import android.content.Context
 import android.os.Build
@@ -7,6 +8,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import android.widget.Button
+import android.widget.DatePicker
 import android.widget.EditText
 import android.widget.ImageView
 import android.widget.LinearLayout
@@ -14,13 +16,24 @@ import android.widget.TextView
 import android.widget.Toast
 import androidx.core.content.ContextCompat.getString
 import androidx.recyclerview.widget.RecyclerView
+import java.text.DateFormat
+import java.text.SimpleDateFormat
+import java.util.Calendar
+import java.util.Date
+import java.util.Locale
 
 class RecyclerTaskAdapter(private val context: Context, private val arrTask: ArrayList<TaskModel>) :
-    RecyclerView.Adapter<RecyclerTaskAdapter.ViewHolder>() {
+    RecyclerView.Adapter<RecyclerTaskAdapter.ViewHolder>(), DatePickerDialog.OnDateSetListener {
 
     private val db: LocalDB by lazy {
         LocalDB.getDB(context)
     }
+    private lateinit var calendar: Calendar
+    private lateinit var dueDate: Date
+    private lateinit var txtDueDate: TextView
+
+    private var dateSet = false
+    private val outputFormat = SimpleDateFormat("d/M/yy", Locale.getDefault())
 
     inner class ViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
 
@@ -28,6 +41,8 @@ class RecyclerTaskAdapter(private val context: Context, private val arrTask: Arr
         val taskName: TextView = itemView.findViewById(R.id.tv_task_name)
         val taskDescription: TextView = itemView.findViewById(R.id.tv_task_description)
         val lLRow: LinearLayout = itemView.findViewById(R.id.llRow)
+        val dueDate: TextView = itemView.findViewById(R.id.txt_due_date)
+
         fun showToast(message: String) {
             Toast.makeText(itemView.context, message, Toast.LENGTH_SHORT).show()
         }
@@ -42,12 +57,26 @@ class RecyclerTaskAdapter(private val context: Context, private val arrTask: Arr
         return arrTask.size
     }
 
+
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
         holder.taskStatus.setImageResource(arrTask[position].img)
         holder.taskName.text = arrTask[position].name
         holder.taskDescription.text = arrTask[position].description
+
+        calendar = Calendar.getInstance()
+        if(arrTask[position].dueDate!!.time.toString() != "-1")
+        {
+            holder.dueDate.text = outputFormat.format((arrTask[position].dueDate!!))
+            calendar.time = arrTask[position].dueDate!!
+        }
+        else
+            holder.dueDate.text = ""
+
+
         if (holder.taskDescription.text.isNotBlank())
             holder.taskDescription.visibility = View.VISIBLE
+        if (holder.dueDate.text.isNotBlank())
+            holder.dueDate.visibility = View.VISIBLE
 
         val tick = holder.lLRow
         if (context is MainActivity) {
@@ -62,23 +91,40 @@ class RecyclerTaskAdapter(private val context: Context, private val arrTask: Arr
                 edit.show()
                 val btnAddDialog = edit.findViewById<Button>(R.id.btnAddDialog)
                 val btnDelDialog = edit.findViewById<Button>(R.id.btnDelDialog)
+                val btnSetDue = edit.findViewById<Button>(R.id.btn_set_due)
                 val edtTaskName = edit.findViewById<EditText>(R.id.edtTaskName)
                 val edtTaskDescription = edit.findViewById<EditText>(R.id.edtTaskDescription)
+                txtDueDate = edit.findViewById(R.id.txtReminder)
+
+
+                if(arrTask[position].dueDate!!.time.toString() != "-1") {
+                    txtDueDate.text = DateFormat.getDateInstance().format(arrTask[position].dueDate!!)
+                    txtDueDate.visibility = View.VISIBLE
+                }
                 edtTaskName.setText(holder.taskName.text)
                 edtTaskDescription.setText(holder.taskDescription.text)
                 btnAddDialog.text = getString(context, R.string.btn_done)
                 btnDelDialog.visibility = View.VISIBLE
+
                 if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
                     context.requestFocusNew(edtTaskName)
                 } else {
                     context.requestFocus(edtTaskName)
+                }
+
+                btnSetDue.setOnClickListener {
+                    showDatePicker(context, position)
+                    if (arrTask[position].dueDate!!.time.toString() != "-1")
+                        calendar.time = arrTask[position].dueDate!!
+                    dateSet = true
                 }
                 btnDelDialog.setOnClickListener {
                     val new = Task(
                         arrTask[position].id,
                         arrTask[position].name,
                         arrTask[position].description,
-                        arrTask[position].img
+                        arrTask[position].img,
+                        arrTask[position].dueDate
                     )
                     db.taskDao().delTask(new)
                     edit.dismiss()
@@ -87,25 +133,32 @@ class RecyclerTaskAdapter(private val context: Context, private val arrTask: Arr
                 btnAddDialog.setOnClickListener {
                     val text = edtTaskName.text.toString()
                     val description = edtTaskDescription.text.toString()
+                    if (dateSet)
+                        dueDate = Date(calendar.timeInMillis)
+                    else
+                        dueDate = arrTask[position].dueDate!!
                     if (text.isBlank()) {
                         holder.showToast("Task Name is Needed!")
                     } else {
-                        val new = Task(arrTask[position].id, text, description, 0)
+                        val new = Task(arrTask[position].id, text, description, 0, dueDate)
                         db.taskDao().editTask(new)
                         (context).showTasks(0)
                     }
+                    dateSet = false
                     edit.dismiss()
                 }
                 true
             }
         }
+
         tick.setOnClickListener {
             if (context is MainActivity) {
                 val new = Task(
                     /* id = */ arrTask[position].id,
                     /* name = */ arrTask[position].name,
                     /* description = */ arrTask[position].description,
-                    /* status = */ 1
+                    /* status = */ 1,
+                    arrTask[position].dueDate
                 )
                 db.taskDao().editTask(new)
                 (context).showTasks(0)
@@ -114,7 +167,8 @@ class RecyclerTaskAdapter(private val context: Context, private val arrTask: Arr
                     /* id = */ arrTask[position].id,
                     /* name = */ arrTask[position].name,
                     /* description = */ arrTask[position].description,
-                    /* status = */ 0
+                    /* status = */ 0,
+                    arrTask[position].dueDate
                 )
                 db.taskDao().editTask(new)
                 (context as DoneTasksActivity).showTasks(1)
@@ -122,4 +176,25 @@ class RecyclerTaskAdapter(private val context: Context, private val arrTask: Arr
         }
     }
 
+    private fun showDatePicker(context: Context, position: Int) {
+        if (txtDueDate.text.toString() != "") {
+            calendar.time = DateFormat.getDateInstance().parse(txtDueDate.text.toString())!!
+        }
+        else {
+            calendar.time = Date(System.currentTimeMillis())
+        }
+
+        val year = calendar.get(Calendar.YEAR)
+        val month = calendar.get(Calendar.MONTH)
+        val dayOfMonth = calendar.get(Calendar.DAY_OF_MONTH)
+
+        val dPD = DatePickerDialog(context, this, year, month, dayOfMonth)
+        dPD.datePicker.minDate = Calendar.getInstance().timeInMillis
+        dPD.show()
+    }
+    override fun onDateSet(view: DatePicker?, year: Int, month: Int, dayOfMonth: Int) {
+        calendar.set(year, month, dayOfMonth)
+        txtDueDate.text = DateFormat.getDateInstance().format(Date(calendar.timeInMillis))
+        dateSet = true
+    }
 }
