@@ -7,6 +7,7 @@ import android.content.Intent
 import android.os.Build
 import android.os.Build.VERSION_CODES
 import android.os.Bundle
+import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
@@ -155,9 +156,10 @@ class MainActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener {
     }
 
     private lateinit var txtDueDate: TextView
+    private lateinit var date: Date
 
     private fun newTask() {
-
+        calendar = Calendar.getInstance()
         val add = Dialog(this)
         add.setContentView(R.layout.add_edit_task)
         add.show()
@@ -172,14 +174,19 @@ class MainActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener {
             requestFocus(edtTaskName)
         }
 
-        var date = Date(-1)
 
         btnSetDue.setOnClickListener {
             showDatePicker()
             if (dateSet) {
-                val tIM = if (calendar.timeInMillis != 0L) calendar.timeInMillis else -1L
-                date = Date(tIM)
-                txtDueDate.text = DateFormat.getDateInstance().format(Date(tIM))
+                // ERROR
+                try {
+                    txtDueDate.text = DateFormat.getDateInstance().format(date)
+                    date =
+                        if (calendar.timeInMillis != 0L) Date(calendar.timeInMillis) else Date(-1L)
+                } catch (exception: Exception){
+                    Log.d("ERROR!!", "date: $date\ntxtDueDate : $txtDueDate")
+                }
+                dateSet = false
             }
         }
 
@@ -191,6 +198,11 @@ class MainActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener {
                 val toast = Toast.makeText(this, "Task Name is needed!", Toast.LENGTH_SHORT)
                 toast.show()
             } else {
+                if (dateSet) {
+                    date =
+                        if (calendar.timeInMillis != 0L) Date(calendar.timeInMillis) else Date(-1L)
+                    dateSet = false
+                } else date = Date(-1)
                 db.taskDao().addTask(Task(text, desc, status, date))
                 calendar = Calendar.getInstance()
                 showTasks(0)
@@ -201,7 +213,13 @@ class MainActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener {
 
     private fun showDatePicker() {
         calendar = Calendar.getInstance()
-        calendar.time = Date(System.currentTimeMillis())
+
+        if (txtDueDate.text.toString() != "") {
+            calendar.time = DateFormat.getDateInstance().parse(txtDueDate.text.toString())!!
+        } else {
+            calendar.time = Date(System.currentTimeMillis())
+        }
+
         val year = calendar.get(Calendar.YEAR)
         val month = calendar.get(Calendar.MONTH)
         val dayOfMonth = calendar.get(Calendar.DAY_OF_MONTH)
@@ -210,16 +228,20 @@ class MainActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener {
         dPD.datePicker.minDate = Calendar.getInstance().timeInMillis
         dPD.show()
     }
+
     override fun onDateSet(view: DatePicker?, year: Int, month: Int, dayOfMonth: Int) {
         calendar.set(year, month, dayOfMonth)
+        txtDueDate.visibility = View.VISIBLE
         txtDueDate.text = DateFormat.getDateInstance().format(Date(calendar.timeInMillis))
         dateSet = true
     }
+
     @RequiresApi(VERSION_CODES.R)
     fun requestFocusNew(edtTaskName: EditText) {
         edtTaskName.requestFocus()
         edtTaskName.windowInsetsController?.show(WindowInsetsCompat.Type.ime())
     }
+
     fun requestFocus(edtTaskName: EditText) {
         edtTaskName.requestFocus()
         // Show the keyboard

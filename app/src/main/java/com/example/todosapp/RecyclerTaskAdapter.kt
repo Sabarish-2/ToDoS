@@ -133,10 +133,10 @@ class RecyclerTaskAdapter(private val context: Context, private val arrTask: Arr
                 btnAddDialog.setOnClickListener {
                     val text = edtTaskName.text.toString()
                     val description = edtTaskDescription.text.toString()
-                    if (dateSet)
-                        dueDate = Date(calendar.timeInMillis)
+                    dueDate = if (dateSet)
+                        Date(calendar.timeInMillis)
                     else
-                        dueDate = arrTask[position].dueDate!!
+                        arrTask[position].dueDate!!
                     if (text.isBlank()) {
                         holder.showToast("Task Name is Needed!")
                     } else {
@@ -194,6 +194,7 @@ class RecyclerTaskAdapter(private val context: Context, private val arrTask: Arr
     }
     override fun onDateSet(view: DatePicker?, year: Int, month: Int, dayOfMonth: Int) {
         calendar.set(year, month, dayOfMonth)
+        txtDueDate.visibility = View.VISIBLE
         txtDueDate.text = DateFormat.getDateInstance().format(Date(calendar.timeInMillis))
         dateSet = true
     }
