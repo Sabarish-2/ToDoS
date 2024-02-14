@@ -7,7 +7,6 @@ import android.content.Intent
 import android.os.Build
 import android.os.Build.VERSION_CODES
 import android.os.Bundle
-import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
@@ -178,14 +177,9 @@ class MainActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener {
         btnSetDue.setOnClickListener {
             showDatePicker()
             if (dateSet) {
-                // ERROR
-                try {
-                    txtDueDate.text = DateFormat.getDateInstance().format(date)
-                    date =
-                        if (calendar.timeInMillis != 0L) Date(calendar.timeInMillis) else Date(-1L)
-                } catch (exception: Exception){
-                    Log.d("ERROR!!", "date: $date\ntxtDueDate : $txtDueDate")
-                }
+                date =
+                    if (calendar.timeInMillis != 0L) Date(calendar.timeInMillis) else Date(-1L)
+                txtDueDate.text = DateFormat.getDateInstance().format(date)
                 dateSet = false
             }
         }
