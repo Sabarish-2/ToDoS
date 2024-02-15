@@ -1,5 +1,6 @@
 package com.example.todosapp
 
+import android.app.AlertDialog
 import android.app.DatePickerDialog
 import android.app.Dialog
 import android.content.Context
@@ -16,6 +17,7 @@ import android.widget.DatePicker
 import android.widget.EditText
 import android.widget.TextView
 import android.widget.Toast
+import androidx.activity.OnBackPressedCallback
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.WindowInsetsCompat
@@ -44,7 +46,7 @@ class MainActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener {
         toolBar = findViewById(R.id.toolBar)
 
         setSupportActionBar(toolBar)
-        supportActionBar?.title = "Your Task App"
+        supportActionBar?.title = "To Do S App"
         toolBar.subtitle = "Pending task List"
 
 
@@ -54,6 +56,27 @@ class MainActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener {
         btnAdd.setOnClickListener {
             newTask()
         }
+
+        val onBackPressedCallback = object:OnBackPressedCallback(true){
+            override fun handleOnBackPressed() {
+                val backDialog: AlertDialog.Builder = AlertDialog.Builder(this@MainActivity)
+                backDialog.setTitle("Close ToDoS App?")
+                backDialog.setIcon(R.drawable.baseline_exit_to_app_24)
+                backDialog.setMessage("Are you sure you want to exit?")
+
+                backDialog.setPositiveButton("Yes") { dialog, _ ->
+                    dialog.dismiss()
+                    finish()
+                }
+                backDialog.setNegativeButton("No") { dialog, _ ->
+                    dialog.dismiss()
+                }
+
+                backDialog.show()
+            }
+
+        }
+        onBackPressedDispatcher.addCallback(onBackPressedCallback)
     }
 
     override fun onResume() {
@@ -86,7 +109,7 @@ class MainActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener {
             db.taskDao().addTask(Task(-1, "name", null, -1, Date(-1)))
             db.taskDao().addTask(
                 Task(
-                    1,
+                    3,
                     "Hey, create your first task by clicking on the plus sign at the bottom right corner!",
                     "And add a description and due date, although they are optional.",
                     0,
@@ -95,12 +118,12 @@ class MainActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener {
             )
             db.taskDao().addTask(
                 Task(
-                    2, "Mark your tasks as done or undone by tapping on them!", null, 0, Date(-1)
+                    4, "Mark your tasks as done or undone by tapping on them!", null, 0, Date(-1)
                 )
             )
             db.taskDao().addTask(
                 Task(
-                    3,
+                    5,
                     "You can also edit or delete them with a long press.",
                     "Note that the above task neither has any description, nor any due date.",
                     0, Date(-1)
@@ -108,7 +131,7 @@ class MainActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener {
             )
             db.taskDao().addTask(
                 Task(
-                    4,
+                    6,
                     "Check the tasks you marked as done in the 'Done' section.",
                     "Go to the 'Done' Section by tapping on the tick mark in the top right corner.",
                     0, Date(calendar.timeInMillis)
@@ -116,8 +139,16 @@ class MainActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener {
             )
             db.taskDao().addTask(
                 Task(
-                    5,
-                    "Mark a task as Undone by taping on it. You can delete it there!",
+                    1,
+                    "Mark a task as Undone by taping on it.",
+                    null,
+                    1, Date(calendar.timeInMillis)
+                )
+            )
+            db.taskDao().addTask(
+                Task(
+                    2,
+                    "You can delete a task with a long press!",
                     null,
                     1, Date(calendar.timeInMillis)
                 )

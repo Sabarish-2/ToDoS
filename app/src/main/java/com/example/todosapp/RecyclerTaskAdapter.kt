@@ -1,5 +1,6 @@
 package com.example.todosapp
 
+import android.app.AlertDialog
 import android.app.DatePickerDialog
 import android.app.Dialog
 import android.content.Context
@@ -113,22 +114,34 @@ class RecyclerTaskAdapter(private val context: Context, private val arrTask: Arr
                 }
 
                 btnSetDue.setOnClickListener {
-                    showDatePicker(context, position)
+                    showDatePicker(context)
                     if (arrTask[position].dueDate!!.time.toString() != "-1")
                         calendar.time = arrTask[position].dueDate!!
                     dateSet = true
                 }
                 btnDelDialog.setOnClickListener {
-                    val new = Task(
-                        arrTask[position].id,
-                        arrTask[position].name,
-                        arrTask[position].description,
-                        arrTask[position].img,
-                        arrTask[position].dueDate
-                    )
-                    db.taskDao().delTask(new)
-                    edit.dismiss()
-                    (context).showTasks(0)
+
+                    val delDialog: AlertDialog.Builder = AlertDialog.Builder(context)
+                    delDialog.setTitle("Delete Task?")
+                    delDialog.setIcon(R.drawable.baseline_delete_24)
+                    delDialog.setMessage("Are you sure to Delete\n" + arrTask[position].name + "?")
+                    delDialog.setPositiveButton("Yes") { dialog, _ ->
+                        val new = Task(
+                            arrTask[position].id,
+                            arrTask[position].name,
+                            arrTask[position].description,
+                            arrTask[position].img,
+                            arrTask[position].dueDate
+                        )
+                        db.taskDao().delTask(new)
+                        dialog.dismiss()
+                        edit.dismiss()
+                        (context).showTasks(0)
+                    }
+                    delDialog.setNegativeButton("No") { dialog, _ ->
+                        dialog.dismiss()
+                    }
+                    delDialog.show()
                 }
                 btnAddDialog.setOnClickListener {
                     val text = edtTaskName.text.toString()
@@ -148,6 +161,33 @@ class RecyclerTaskAdapter(private val context: Context, private val arrTask: Arr
                     edit.dismiss()
                 }
                 true
+            }
+        } else if (context is DoneTasksActivity){
+            tick.setOnLongClickListener{
+
+                val delDialog: AlertDialog.Builder = AlertDialog.Builder(context)
+                delDialog.setTitle("Delete Task?")
+                delDialog.setIcon(R.drawable.baseline_delete_24)
+                delDialog.setMessage("Are you sure to Delete\n" + arrTask[position].name + " Task?")
+
+                delDialog.setPositiveButton("Yes") { dialog, _ ->
+                    val new = Task(
+                        arrTask[position].id,
+                        arrTask[position].name,
+                        arrTask[position].description,
+                        arrTask[position].img,
+                        arrTask[position].dueDate
+                    )
+                    db.taskDao().delTask(new)
+                    dialog.dismiss()
+                    (context).showTasks(1)
+                }
+                delDialog.setNegativeButton("No") { dialog, _ ->
+                    dialog.dismiss()
+                }
+                delDialog.show()
+
+            true
             }
         }
 
@@ -176,7 +216,7 @@ class RecyclerTaskAdapter(private val context: Context, private val arrTask: Arr
         }
     }
 
-    private fun showDatePicker(context: Context, position: Int) {
+    private fun showDatePicker(context: Context) {
         if (txtDueDate.text.toString() != "") {
             calendar.time = DateFormat.getDateInstance().parse(txtDueDate.text.toString())!!
         }

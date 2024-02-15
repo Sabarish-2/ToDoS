@@ -26,7 +26,7 @@ class DoneTasksActivity : AppCompatActivity() {
         setSupportActionBar(toolBar)
 //      Back Button
         supportActionBar?.setDisplayHomeAsUpEnabled(true)
-        supportActionBar?.title = "Your Task App"
+        supportActionBar?.title = "To Do S App"
         toolBar.subtitle = "Completed task List"
         showTasks(1)
     }
