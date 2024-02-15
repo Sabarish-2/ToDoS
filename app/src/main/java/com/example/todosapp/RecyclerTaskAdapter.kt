@@ -124,7 +124,7 @@ class RecyclerTaskAdapter(private val context: Context, private val arrTask: Arr
                     val delDialog: AlertDialog.Builder = AlertDialog.Builder(context)
                     delDialog.setTitle("Delete Task?")
                     delDialog.setIcon(R.drawable.baseline_delete_24)
-                    delDialog.setMessage("Are you sure to Delete\n" + arrTask[position].name + "?")
+                    delDialog.setMessage("Are you sure to Delete\n" + arrTask[position].name + " Task?")
                     delDialog.setPositiveButton("Yes") { dialog, _ ->
                         val new = Task(
                             arrTask[position].id,
