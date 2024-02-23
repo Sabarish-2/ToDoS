@@ -1,6 +1,5 @@
 package com.example.todosapp
 
-import android.app.Activity
 import android.app.AlarmManager
 import android.app.AlertDialog
 import android.app.DatePickerDialog
@@ -12,6 +11,7 @@ import android.app.TimePickerDialog
 import android.content.Context
 import android.content.Intent
 import android.content.pm.PackageManager
+import android.graphics.Color
 import android.os.Build
 import android.os.Build.VERSION_CODES
 import android.os.Bundle
@@ -39,9 +39,10 @@ import java.util.Calendar
 import java.util.Date
 import java.util.Locale
 
+private const val CHANNEL_ID = "Task Reminder"
+
 class MainActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener {
 
-    private val CHANNEL_ID = "Task Reminder"
     private lateinit var alarmManager: AlarmManager
     private lateinit var pendingIntent: PendingIntent
 
@@ -189,7 +190,6 @@ class MainActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener {
     }
 
     private lateinit var txtReminder: TextView
-    private lateinit var cal: Calendar
 
     private fun newTask() {
         calendar = Calendar.getInstance()
@@ -219,7 +219,7 @@ class MainActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener {
                     )
                 }
             }
-            showDatePicker(this, this)
+            showDatePicker()
         }
 
         btnAddDialog.setOnClickListener {
@@ -239,7 +239,6 @@ class MainActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener {
                 val id = db.taskDao().getTaskId(text, status)
                 if (dateSet) {
                     setAlarm(id)
-//                    showTaskNotification(this, this, id, calendar)
                     dateSet = false
                 }
                 calendar = Calendar.getInstance()
@@ -260,69 +259,21 @@ class MainActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener {
     }
 
     private fun createNotChannel() {
-
-//      !! We're not checking for existing channel, but creating new directly !!
-
         if (Build.VERSION.SDK_INT >= VERSION_CODES.O) {
             val name = "Task Reminder"
-//            val desc = "Some description"
+            val desc =
+                "This is the notification for the a task's reminder that you can set by holding a task in Pending tasks screen!"
             val imp = NotificationManager.IMPORTANCE_HIGH
             val channel = NotificationChannel(CHANNEL_ID, name, imp)
-//                channel.lightColor = Color.GREEN   // what?
-                channel.enableVibration(true)
-//            channel.description = desc
+            channel.lightColor = Color.GREEN   // what?
+            channel.enableVibration(true)
+            channel.description = desc
             val notificationManager = getSystemService(NotificationManager::class.java)
             notificationManager.createNotificationChannel(channel)
-//            }
         }
     }
 
-    private fun showTaskNotification(
-        activity: Activity, context: Context, id: Int, notificationCal: Calendar
-    ) {
-//        Log.d("Time : ", "Now: " + Calendar.getInstance().timeInMillis + " Set: " + notificationCal.timeInMillis)
-        val taskName = db.taskDao().getTaskName(id)
-        // Schedule the notification
-        val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
-//        val intent = Intent(context, MainActivity::class.java)
-//        val pIntent = PendingIntent.getActivity(context, id, intent, PendingIntent.FLAG_IMMUTABLE)
-//        val builder =
-//            NotificationCompat.Builder(context, CHANNEL_ID).setSmallIcon(R.mipmap.ic_launcher)
-//                .setContentTitle(taskName).setContentText("Its time for: $taskName")
-//                .setAutoCancel(true).setPriority(NotificationCompat.PRIORITY_DEFAULT)
-//                .setContentIntent(pIntent)
-
-//        builder.setContentIntent(pIntent)
-
-//      !! We're not checking for existing channel, but creating new directly !!
-
-//        if (Build.VERSION.SDK_INT >= VERSION_CODES.O) {
-//            val name = "Some NAme"
-//            val desc = "Some description"
-//            val imp = NotificationManager.IMPORTANCE_HIGH
-//            val channel = NotificationChannel(CHANNEL_ID, name, imp)
-////                channel.lightColor = Color.GREEN   // what?
-////                channel.enableVibration(true)
-//            channel.description = desc
-//            val notificationManager = getSystemService(NotificationManager::class.java)
-//                notificationManager.createNotificationChannel(channel)
-////            }
-//        }
-
-//        alarmManager.set(AlarmManager.RTC_WAKEUP, notificationCal.timeInMillis, pIntent)
-
-
-//            notMan.notify(0, builder.build())
-
-
-        // Show the notification
-//        with(NotificationManagerCompat.from(context)) {
-//            notify(id, builder.build())
-//        }
-    }
-
-
-    private fun showTimePickerDialog(selectedDate: Calendar, activity: Activity, context: Context) {
+    private fun showTimePickerDialog(selectedDate: Calendar) {
         val hourOfDay = selectedDate.get(Calendar.HOUR_OF_DAY)
         val minute = selectedDate.get(Calendar.MINUTE)
 
@@ -343,7 +294,7 @@ class MainActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener {
         timePickerDialog.show()
     }
 
-    private fun showDatePicker(activity: Activity, context: Context) {
+    private fun showDatePicker() {
 
         if (txtReminder.text.toString() == "") {
             calendar.time = Date(System.currentTimeMillis())
@@ -359,7 +310,7 @@ class MainActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener {
                 selectedDate.set(selectedYear, selectedMonth, selectedDayOfMonth)
 
                 // After selecting the date, show the TimePickerDialog
-                showTimePickerDialog(selectedDate, activity, context)
+                showTimePickerDialog(selectedDate)
             }, year, month, dayOfMonth
         )
         dPD.datePicker.minDate = Calendar.getInstance().timeInMillis
