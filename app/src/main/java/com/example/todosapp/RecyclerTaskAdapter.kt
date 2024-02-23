@@ -30,11 +30,9 @@ class RecyclerTaskAdapter(private val context: Context, private val arrTask: Arr
         LocalDB.getDB(context)
     }
     private lateinit var calendar: Calendar
-//    private lateinit var calTIM: Long
     private lateinit var txtReminder: TextView
 
     private var dateSet = false
-    private val outputFormat = SimpleDateFormat("d/M/yy", Locale.getDefault())
 
     inner class ViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
 
@@ -42,7 +40,7 @@ class RecyclerTaskAdapter(private val context: Context, private val arrTask: Arr
         val taskName: TextView = itemView.findViewById(R.id.tv_task_name)
         val taskDescription: TextView = itemView.findViewById(R.id.tv_task_description)
         val lLRow: LinearLayout = itemView.findViewById(R.id.llRow)
-        val dueDate: TextView = itemView.findViewById(R.id.txt_due_date)
+        val txtRemTR: TextView = itemView.findViewById(R.id.txt_reminder)
 
         fun showToast(message: String) {
             Toast.makeText(itemView.context, message, Toast.LENGTH_SHORT).show()
@@ -68,16 +66,16 @@ class RecyclerTaskAdapter(private val context: Context, private val arrTask: Arr
         if(arrTask[position].calTIM.toString() != "-1")
         {
             calendar.timeInMillis = arrTask[position].calTIM
-            holder.dueDate.text = SimpleDateFormat("d/M/yy", Locale.getDefault()).format((calendar.time))
+            holder.txtRemTR.text = SimpleDateFormat("h:mm a\nd/M/yy", Locale.getDefault()).format(calendar.time)
         }
         else
-            holder.dueDate.text = ""
+            holder.txtRemTR.text = ""
 
 
         if (holder.taskDescription.text.isNotBlank())
             holder.taskDescription.visibility = View.VISIBLE
-        if (holder.dueDate.text.isNotBlank())
-            holder.dueDate.visibility = View.VISIBLE
+        if (holder.txtRemTR.text.isNotBlank())
+            holder.txtRemTR.visibility = View.VISIBLE
 
         val tick = holder.lLRow
         if (context is MainActivity) {
