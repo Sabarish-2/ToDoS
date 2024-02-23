@@ -4,24 +4,9 @@ import androidx.room.ColumnInfo;
 import androidx.room.Entity;
 import androidx.room.Ignore;
 import androidx.room.PrimaryKey;
-import androidx.room.TypeConverter;
-import androidx.room.TypeConverters;
 
-import java.util.Date;
 
-class DateConverter {
-    @TypeConverter
-    public static Date toDate(Long timestamp) {
-        return timestamp == null ? null : new Date(timestamp);
-    }
-
-    @TypeConverter
-    public static Long toTimestamp(Date date) {
-        return date == null ? null : date.getTime();
-    }
-}
 @Entity(tableName = "task")
-@TypeConverters(DateConverter.class) // Add this line
 public class Task {
     @PrimaryKey(autoGenerate = true)
     private int id;
@@ -40,23 +25,23 @@ public class Task {
     @ColumnInfo(name = "status")
     private int status;
     @ColumnInfo(name = "date")
-    private Date dueDate;
+    private long calTIM;
 
     @Ignore
-    Task(int id, String name, String description, int status, Date dueDate) {
+    Task(int id, String name, String description, int status, long calTIM) {
         this.id = id;
         this.name = name;
         this.description = description;
         this.status = status;
-        this.dueDate = dueDate;
+        this.calTIM = calTIM;
     }
 
     @Ignore
-    Task(String name, String description, int status, Date dueDate) {
+    Task(String name, String description, int status, long calTIM) {
         this.name = name;
         this.description = description;
         this.status = status;
-        this.dueDate = dueDate;
+        this.calTIM = calTIM;
     }
 
     public int getId() {
@@ -80,11 +65,11 @@ public class Task {
     public int getStatus() {
         return status;
     }
-    public void setDueDate(Date dueDate) {
-        this.dueDate = dueDate;
+    public void setCalTIM(long calTIM) {
+        this.calTIM = calTIM;
     }
-    public Date getDueDate() {
-        return dueDate;
+    public long getCalTIM() {
+        return calTIM;
     }
     public void setStatus(int status) {
         this.status = status;

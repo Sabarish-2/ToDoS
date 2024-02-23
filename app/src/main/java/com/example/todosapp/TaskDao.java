@@ -25,4 +25,7 @@ public interface TaskDao {
 
     @Query("select id from task where name = :name and status = :status")
     int getTaskId(String name, int status);
+
+    @Query("select name from task where id = :id")
+    String getTaskName(int id);
 }

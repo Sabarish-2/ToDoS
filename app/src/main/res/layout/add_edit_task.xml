@@ -21,8 +21,6 @@
         android:text="@string/new_task_dialog"
         android:textSize="32sp"
         android:textStyle="bold" />
-    <!--        android:textColor="@color/gold_grey"-->
-
     <EditText
         android:id="@+id/edtTaskName"
         android:layout_width="wrap_content"
@@ -51,31 +49,24 @@
         android:inputType="textMultiLine"
         android:lines="3" />
 
-    <LinearLayout
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_marginVertical="8dp"
-        android:gravity="center">
-
         <TextView
             android:id="@+id/txtReminder"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:layout_gravity="center_vertical"
-            android:layout_marginHorizontal="12dp"
-            android:gravity="center_vertical"
+            android:layout_marginVertical="8dp"
             android:visibility="gone"
             android:textSize="20sp"/>
+<!--            android:text="12:00 AM 31/12/224"-->
+<!--            android:layout_gravity="center"-->
 
         <Button
             android:id="@+id/btn_set_due"
             android:layout_width="wrap_content"
             android:layout_height="wrap_content"
             style="@style/DIALOG_BUTTON"
+            android:layout_marginVertical="8dp"
             android:backgroundTint="#50B"
             android:text="@string/set_due_date"/>
-    </LinearLayout>
-
     <LinearLayout
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"

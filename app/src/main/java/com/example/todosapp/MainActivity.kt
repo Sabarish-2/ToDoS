@@ -1,13 +1,22 @@
 package com.example.todosapp
 
+import android.app.Activity
+import android.app.AlarmManager
 import android.app.AlertDialog
 import android.app.DatePickerDialog
 import android.app.Dialog
+import android.app.NotificationChannel
+import android.app.NotificationManager
+import android.app.PendingIntent
+import android.app.TimePickerDialog
 import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageManager
+import android.graphics.Color
 import android.os.Build
 import android.os.Build.VERSION_CODES
 import android.os.Bundle
+import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
@@ -20,15 +29,24 @@ import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
 import androidx.annotation.RequiresApi
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.app.ActivityCompat
+import androidx.core.app.NotificationCompat
+import androidx.core.app.NotificationManagerCompat
+import androidx.core.content.ContextCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import java.text.DateFormat
+import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Date
+import java.util.Locale
 
 class MainActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener {
+
+    private val CHANNEL_ID = "Task Reminder"
+
 
     private val db: LocalDB by lazy {
         LocalDB.getDB(this)
@@ -50,14 +68,13 @@ class MainActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener {
         toolBar.subtitle = "Pending task List"
 
 
-        val btnAdd =
-            findViewById<FloatingActionButton>(R.id.btnAdd)
+        val btnAdd = findViewById<FloatingActionButton>(R.id.btnAdd)
         showTasks(0)
         btnAdd.setOnClickListener {
             newTask()
         }
 
-        val onBackPressedCallback = object:OnBackPressedCallback(true){
+        val onBackPressedCallback = object : OnBackPressedCallback(true) {
             override fun handleOnBackPressed() {
                 val backDialog: AlertDialog.Builder = AlertDialog.Builder(this@MainActivity)
                 backDialog.setTitle("Close ToDoS App?")
@@ -96,29 +113,25 @@ class MainActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener {
             if (i.status == taskStatus) {
                 arrTask.add(
                     TaskModel(
-                        R.drawable.no_tick_box,
-                        i.name,
-                        i.description,
-                        i.id,
-                        i.dueDate
+                        R.drawable.no_tick_box, i.name, i.description, i.id, i.calTIM
                     )
                 )
             }
         }
         if (task.size == 0) {
-            db.taskDao().addTask(Task(-1, "name", null, -1, Date(-1)))
+            db.taskDao().addTask(Task(-1, "name", null, -1, -1))
             db.taskDao().addTask(
                 Task(
                     3,
                     "Hey, create your first task by clicking on the plus sign at the bottom right corner!",
                     "And add a description and due date, although they are optional.",
                     0,
-                    Date(calendar.timeInMillis)
+                    calendar.timeInMillis
                 )
             )
             db.taskDao().addTask(
                 Task(
-                    4, "Mark your tasks as done or undone by tapping on them!", null, 0, Date(-1)
+                    4, "Mark your tasks as done or undone by tapping on them!", null, 0, -1
                 )
             )
             db.taskDao().addTask(
@@ -126,7 +139,8 @@ class MainActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener {
                     5,
                     "You can also edit or delete them with a long press.",
                     "Note that the above task neither has any description, nor any due date.",
-                    0, Date(-1)
+                    0,
+                    -1
                 )
             )
             db.taskDao().addTask(
@@ -134,7 +148,8 @@ class MainActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener {
                     6,
                     "Check the tasks you marked as done in the 'Done' section.",
                     "Go to the 'Done' Section by tapping on the tick mark in the top right corner.",
-                    0, Date(calendar.timeInMillis)
+                    0,
+                    calendar.timeInMillis
                 )
             )
             db.taskDao().addTask(
@@ -142,7 +157,8 @@ class MainActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener {
                     1,
                     "Mark a task as Undone by taping on it.",
                     null,
-                    1, Date(calendar.timeInMillis)
+                    1,
+                    calendar.timeInMillis
                 )
             )
             db.taskDao().addTask(
@@ -150,7 +166,8 @@ class MainActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener {
                     2,
                     "You can delete a task with a long press!",
                     null,
-                    1, Date(calendar.timeInMillis)
+                    1,
+                    calendar.timeInMillis
                 )
             )
         }
@@ -158,10 +175,8 @@ class MainActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener {
         if (arrTask.size == 0) {
             textNoTasks.visibility = View.VISIBLE
             recyclerView.visibility = View.GONE
-            val textNoTaskBut1: String = if (task.size == 1)
-                "Start adding more tasks!"
-            else
-                getText(R.string.tasks_complete_text).toString()
+            val textNoTaskBut1: String = if (task.size == 1) "Start adding more tasks!"
+            else getText(R.string.tasks_complete_text).toString()
             textNoTasks.text = textNoTaskBut1
         } else {
             recyclerView.visibility = View.VISIBLE
@@ -186,7 +201,7 @@ class MainActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener {
     }
 
     private lateinit var txtDueDate: TextView
-    private lateinit var date: Date
+    private lateinit var cal: Calendar
 
     private fun newTask() {
         calendar = Calendar.getInstance()
@@ -206,13 +221,7 @@ class MainActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener {
 
 
         btnSetDue.setOnClickListener {
-            showDatePicker()
-            if (dateSet) {
-                date =
-                    if (calendar.timeInMillis != 0L) Date(calendar.timeInMillis) else Date(-1L)
-                txtDueDate.text = DateFormat.getDateInstance().format(date)
-                dateSet = false
-            }
+            showDatePicker(this, this)
         }
 
         btnAddDialog.setOnClickListener {
@@ -223,12 +232,13 @@ class MainActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener {
                 val toast = Toast.makeText(this, "Task Name is needed!", Toast.LENGTH_SHORT)
                 toast.show()
             } else {
+            val rem = if (dateSet){ calendar.timeInMillis } else {-1}
+                db.taskDao().addTask(Task(text, desc, status, rem))
+                val id = db.taskDao().getTaskId(text, status)
                 if (dateSet) {
-                    date =
-                        if (calendar.timeInMillis != 0L) Date(calendar.timeInMillis) else Date(-1L)
+                    showTaskNotification(this, this, id, calendar)
                     dateSet = false
-                } else date = Date(-1)
-                db.taskDao().addTask(Task(text, desc, status, date))
+                }
                 calendar = Calendar.getInstance()
                 showTasks(0)
                 add.dismiss()
@@ -236,8 +246,90 @@ class MainActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener {
         }
     }
 
-    private fun showDatePicker() {
-        calendar = Calendar.getInstance()
+    private fun showTaskNotification(
+        activity: Activity,
+        context: Context,
+        id: Int,
+        notificationCal: Calendar
+    ) {
+        Log.d("Time : ", "Now: " + Calendar.getInstance().timeInMillis + " Set: " + notificationCal.timeInMillis)
+        val taskName = db.taskDao().getTaskName(id)
+        // Schedule the notification
+        val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
+        val intent = Intent(context, MainActivity::class.java)
+        val pIntent = PendingIntent.getActivity(context, id, intent, PendingIntent.FLAG_IMMUTABLE)
+        val builder = NotificationCompat.Builder(context, CHANNEL_ID)
+            .setSmallIcon(R.mipmap.ic_launcher)
+            .setContentTitle(taskName)
+            .setContentText("Its time for: $taskName")
+            .setAutoCancel(true)
+            .setPriority(NotificationCompat.PRIORITY_DEFAULT)
+            .setContentIntent(pIntent)
+
+//        builder.setContentIntent(pIntent)
+
+        val notMan: NotificationManager =
+            getSystemService(Context.NOTIFICATION_SERVICE) as NotificationManager
+
+        if (Build.VERSION.SDK_INT >= VERSION_CODES.O) {
+            var notificationChannel: NotificationChannel? =
+                notMan.getNotificationChannel(CHANNEL_ID)
+            if (notificationChannel == null) {
+                val importance = NotificationManager.IMPORTANCE_HIGH;
+                notificationChannel = NotificationChannel(CHANNEL_ID, "Some description", importance);
+                notificationChannel.lightColor = Color.GREEN;   // what?
+                notificationChannel.enableVibration(true);
+                notMan.createNotificationChannel(notificationChannel);
+
+            }
+        }
+        alarmManager.set(AlarmManager.RTC_WAKEUP, notificationCal.timeInMillis, pIntent)
+
+        if (Build.VERSION.SDK_INT >= VERSION_CODES.TIRAMISU) {
+            if (ContextCompat.checkSelfPermission(
+                    this,
+                    android.Manifest.permission.POST_NOTIFICATIONS
+                ) != PackageManager.PERMISSION_GRANTED
+            ) {
+                ActivityCompat.requestPermissions(
+                    this,
+                    arrayOf(android.Manifest.permission.POST_NOTIFICATIONS),
+                    101
+                )
+            }
+//            notMan.notify(0, builder.build())
+        }
+
+
+
+        // Show the notification
+        with(NotificationManagerCompat.from(context)) {
+
+            notify(id, builder.build())
+        }
+    }
+
+    private fun showTimePickerDialog(selectedDate: Calendar, activity: Activity, context: Context) {
+        val hourOfDay = selectedDate.get(Calendar.HOUR_OF_DAY)
+        val minute = selectedDate.get(Calendar.MINUTE)
+
+        val timePickerDialog = TimePickerDialog(
+            this, { _, selHourOfDay, selMinute ->
+                selectedDate.set(Calendar.HOUR_OF_DAY, selHourOfDay)
+                selectedDate.set(Calendar.MINUTE, selMinute)
+                if (selectedDate.timeInMillis != Calendar.getInstance().timeInMillis) {
+                    txtDueDate.visibility = View.VISIBLE
+                    calendar = selectedDate
+                    txtDueDate.text =
+                        SimpleDateFormat("h:mm a d/M/yy", Locale.getDefault()).format((calendar.time))
+                    dateSet = true
+                }
+            }, hourOfDay, minute, false
+        )
+        timePickerDialog.show()
+    }
+
+    private fun showDatePicker(activity: Activity, context: Context) {
 
         if (txtDueDate.text.toString() != "") {
             calendar.time = DateFormat.getDateInstance().parse(txtDueDate.text.toString())!!
@@ -249,16 +341,17 @@ class MainActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener {
         val month = calendar.get(Calendar.MONTH)
         val dayOfMonth = calendar.get(Calendar.DAY_OF_MONTH)
 
-        val dPD = DatePickerDialog(this, this, year, month, dayOfMonth)
+        val dPD = DatePickerDialog(
+            this, { _, selectedYear, selectedMonth, selectedDayOfMonth ->
+                val selectedDate = calendar
+                selectedDate.set(selectedYear, selectedMonth, selectedDayOfMonth)
+
+                // After selecting the date, show the TimePickerDialog
+                showTimePickerDialog(selectedDate, activity, context)
+            }, year, month, dayOfMonth
+        )
         dPD.datePicker.minDate = Calendar.getInstance().timeInMillis
         dPD.show()
-    }
-
-    override fun onDateSet(view: DatePicker?, year: Int, month: Int, dayOfMonth: Int) {
-        calendar.set(year, month, dayOfMonth)
-        txtDueDate.visibility = View.VISIBLE
-        txtDueDate.text = DateFormat.getDateInstance().format(Date(calendar.timeInMillis))
-        dateSet = true
     }
 
     @RequiresApi(VERSION_CODES.R)
@@ -273,5 +366,9 @@ class MainActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener {
         val inputMethodManager =
             getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
         inputMethodManager.showSoftInput(edtTaskName, InputMethodManager.SHOW_IMPLICIT)
+    }
+
+    override fun onDateSet(view: DatePicker?, year: Int, month: Int, dayOfMonth: Int) {
+        Log.d("G", "G")
     }
 }

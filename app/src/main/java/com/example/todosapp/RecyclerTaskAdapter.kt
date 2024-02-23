@@ -30,8 +30,8 @@ class RecyclerTaskAdapter(private val context: Context, private val arrTask: Arr
         LocalDB.getDB(context)
     }
     private lateinit var calendar: Calendar
-    private lateinit var dueDate: Date
-    private lateinit var txtDueDate: TextView
+//    private lateinit var calTIM: Long
+    private lateinit var txtReminder: TextView
 
     private var dateSet = false
     private val outputFormat = SimpleDateFormat("d/M/yy", Locale.getDefault())
@@ -65,10 +65,10 @@ class RecyclerTaskAdapter(private val context: Context, private val arrTask: Arr
         holder.taskDescription.text = arrTask[position].description
 
         calendar = Calendar.getInstance()
-        if(arrTask[position].dueDate!!.time.toString() != "-1")
+        if(arrTask[position].calTIM.toString() != "-1")
         {
-            holder.dueDate.text = outputFormat.format((arrTask[position].dueDate!!))
-            calendar.time = arrTask[position].dueDate!!
+            calendar.timeInMillis = arrTask[position].calTIM
+            holder.dueDate.text = SimpleDateFormat("d/M/yy", Locale.getDefault()).format((calendar.time))
         }
         else
             holder.dueDate.text = ""
@@ -95,12 +95,12 @@ class RecyclerTaskAdapter(private val context: Context, private val arrTask: Arr
                 val btnSetDue = edit.findViewById<Button>(R.id.btn_set_due)
                 val edtTaskName = edit.findViewById<EditText>(R.id.edtTaskName)
                 val edtTaskDescription = edit.findViewById<EditText>(R.id.edtTaskDescription)
-                txtDueDate = edit.findViewById(R.id.txtReminder)
+                txtReminder = edit.findViewById(R.id.txtReminder)
 
 
-                if(arrTask[position].dueDate!!.time.toString() != "-1") {
-                    txtDueDate.text = DateFormat.getDateInstance().format(arrTask[position].dueDate!!)
-                    txtDueDate.visibility = View.VISIBLE
+                if(arrTask[position].calTIM.toString() != "-1") {
+                    txtReminder.text = SimpleDateFormat("h:mm a d/M/yy", Locale.getDefault()).format((calendar.time))
+                    txtReminder.visibility = View.VISIBLE
                 }
                 edtTaskName.setText(holder.taskName.text)
                 edtTaskDescription.setText(holder.taskDescription.text)
@@ -115,12 +115,11 @@ class RecyclerTaskAdapter(private val context: Context, private val arrTask: Arr
 
                 btnSetDue.setOnClickListener {
                     showDatePicker(context)
-                    if (arrTask[position].dueDate!!.time.toString() != "-1")
-                        calendar.time = arrTask[position].dueDate!!
+                    if (arrTask[position].calTIM.toString() != "-1")
+                        calendar.timeInMillis = arrTask[position].calTIM
                     dateSet = true
                 }
                 btnDelDialog.setOnClickListener {
-
                     val delDialog: AlertDialog.Builder = AlertDialog.Builder(context)
                     delDialog.setTitle("Delete Task?")
                     delDialog.setIcon(R.drawable.baseline_delete_24)
@@ -131,7 +130,7 @@ class RecyclerTaskAdapter(private val context: Context, private val arrTask: Arr
                             arrTask[position].name,
                             arrTask[position].description,
                             arrTask[position].img,
-                            arrTask[position].dueDate
+                            arrTask[position].calTIM
                         )
                         db.taskDao().delTask(new)
                         dialog.dismiss()
@@ -146,14 +145,12 @@ class RecyclerTaskAdapter(private val context: Context, private val arrTask: Arr
                 btnAddDialog.setOnClickListener {
                     val text = edtTaskName.text.toString()
                     val description = edtTaskDescription.text.toString()
-                    dueDate = if (dateSet)
-                        Date(calendar.timeInMillis)
-                    else
-                        arrTask[position].dueDate!!
+                    if (!dateSet)
+                        calendar.timeInMillis = arrTask[position].calTIM
                     if (text.isBlank()) {
                         holder.showToast("Task Name is Needed!")
                     } else {
-                        val new = Task(arrTask[position].id, text, description, 0, dueDate)
+                        val new = Task(arrTask[position].id, text, description, 0, calendar.timeInMillis)
                         db.taskDao().editTask(new)
                         (context).showTasks(0)
                     }
@@ -176,7 +173,7 @@ class RecyclerTaskAdapter(private val context: Context, private val arrTask: Arr
                         arrTask[position].name,
                         arrTask[position].description,
                         arrTask[position].img,
-                        arrTask[position].dueDate
+                        arrTask[position].calTIM
                     )
                     db.taskDao().delTask(new)
                     dialog.dismiss()
@@ -198,7 +195,7 @@ class RecyclerTaskAdapter(private val context: Context, private val arrTask: Arr
                     /* name = */ arrTask[position].name,
                     /* description = */ arrTask[position].description,
                     /* status = */ 1,
-                    arrTask[position].dueDate
+                    arrTask[position].calTIM
                 )
                 db.taskDao().editTask(new)
                 (context).showTasks(0)
@@ -208,7 +205,7 @@ class RecyclerTaskAdapter(private val context: Context, private val arrTask: Arr
                     /* name = */ arrTask[position].name,
                     /* description = */ arrTask[position].description,
                     /* status = */ 0,
-                    arrTask[position].dueDate
+                    arrTask[position].calTIM
                 )
                 db.taskDao().editTask(new)
                 (context as DoneTasksActivity).showTasks(1)
@@ -217,8 +214,8 @@ class RecyclerTaskAdapter(private val context: Context, private val arrTask: Arr
     }
 
     private fun showDatePicker(context: Context) {
-        if (txtDueDate.text.toString() != "") {
-            calendar.time = DateFormat.getDateInstance().parse(txtDueDate.text.toString())!!
+        if (txtReminder.text.toString() != "") {
+            calendar.time = DateFormat.getDateInstance().parse(txtReminder.text.toString())!!
         }
         else {
             calendar.time = Date(System.currentTimeMillis())
@@ -234,8 +231,8 @@ class RecyclerTaskAdapter(private val context: Context, private val arrTask: Arr
     }
     override fun onDateSet(view: DatePicker?, year: Int, month: Int, dayOfMonth: Int) {
         calendar.set(year, month, dayOfMonth)
-        txtDueDate.visibility = View.VISIBLE
-        txtDueDate.text = DateFormat.getDateInstance().format(Date(calendar.timeInMillis))
+        txtReminder.visibility = View.VISIBLE
+        txtReminder.text = DateFormat.getDateInstance().format(Date(calendar.timeInMillis))
         dateSet = true
     }
 }
