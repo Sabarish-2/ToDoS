@@ -15,7 +15,6 @@ import android.graphics.Color
 import android.os.Build
 import android.os.Build.VERSION_CODES
 import android.os.Bundle
-import android.util.Log
 import android.view.Menu
 import android.view.MenuItem
 import android.view.View
@@ -248,6 +247,8 @@ class MainActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener {
         }
     }
 
+//    Check if the task has been marked as done. Then the alarm should be cancelled.
+
     private fun setAlarm(id: Int) {
         alarmManager = getSystemService(ALARM_SERVICE) as AlarmManager
         val intent = Intent(this, MyBroadcastReceiver::class.java)
@@ -322,7 +323,6 @@ class MainActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener {
         edtTaskName.requestFocus()
         edtTaskName.windowInsetsController?.show(WindowInsetsCompat.Type.ime())
     }
-
     fun requestFocus(edtTaskName: EditText) {
         edtTaskName.requestFocus()
         // Show the keyboard
@@ -332,6 +332,6 @@ class MainActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener {
     }
 
     override fun onDateSet(view: DatePicker?, year: Int, month: Int, dayOfMonth: Int) {
-        Log.d("G", "G")
+//        Nothing
     }
 }

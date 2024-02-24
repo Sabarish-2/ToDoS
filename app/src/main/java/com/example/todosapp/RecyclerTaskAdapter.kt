@@ -1,9 +1,16 @@
 package com.example.todosapp
 
+import android.app.AlarmManager
 import android.app.AlertDialog
 import android.app.DatePickerDialog
 import android.app.Dialog
+import android.app.NotificationChannel
+import android.app.NotificationManager
+import android.app.PendingIntent
+import android.app.TimePickerDialog
 import android.content.Context
+import android.content.Intent
+import android.graphics.Color
 import android.os.Build
 import android.view.LayoutInflater
 import android.view.View
@@ -15,20 +22,24 @@ import android.widget.ImageView
 import android.widget.LinearLayout
 import android.widget.TextView
 import android.widget.Toast
+import androidx.appcompat.app.AppCompatActivity
 import androidx.core.content.ContextCompat.getString
+import androidx.core.content.ContextCompat.getSystemService
 import androidx.recyclerview.widget.RecyclerView
-import java.text.DateFormat
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Date
 import java.util.Locale
 
+private const val CHANNEL_ID = "Task Reminder"
+
 class RecyclerTaskAdapter(private val context: Context, private val arrTask: ArrayList<TaskModel>) :
     RecyclerView.Adapter<RecyclerTaskAdapter.ViewHolder>(), DatePickerDialog.OnDateSetListener {
 
-    private val db: LocalDB by lazy {
-        LocalDB.getDB(context)
-    }
+    private lateinit var alarmManager: AlarmManager
+    private lateinit var pendingIntent: PendingIntent
+
+    private val db: LocalDB by lazy { LocalDB.getDB(context) }
     private lateinit var calendar: Calendar
     private lateinit var txtReminder: TextView
 
@@ -63,12 +74,11 @@ class RecyclerTaskAdapter(private val context: Context, private val arrTask: Arr
         holder.taskDescription.text = arrTask[position].description
 
         calendar = Calendar.getInstance()
-        if(arrTask[position].calTIM.toString() != "-1")
-        {
+        if (arrTask[position].calTIM.toString() != "-1") {
             calendar.timeInMillis = arrTask[position].calTIM
-            holder.txtRemTR.text = SimpleDateFormat("h:mm a\nd/M/yy", Locale.getDefault()).format(calendar.time)
-        }
-        else
+            holder.txtRemTR.text =
+                SimpleDateFormat("h:mm a\nd/M/yy", Locale.getDefault()).format(calendar.time)
+        } else
             holder.txtRemTR.text = ""
 
 
@@ -96,8 +106,11 @@ class RecyclerTaskAdapter(private val context: Context, private val arrTask: Arr
                 txtReminder = edit.findViewById(R.id.txtReminder)
 
 
-                if(arrTask[position].calTIM.toString() != "-1") {
-                    txtReminder.text = SimpleDateFormat("h:mm a d/M/yy", Locale.getDefault()).format((calendar.time))
+                if (arrTask[position].calTIM.toString() != "-1") {
+                    txtReminder.text = SimpleDateFormat(
+                        "h:mm a d/M/yy",
+                        Locale.getDefault()
+                    ).format((calendar.time))
                     txtReminder.visibility = View.VISIBLE
                 }
                 edtTaskName.setText(holder.taskName.text)
@@ -116,6 +129,7 @@ class RecyclerTaskAdapter(private val context: Context, private val arrTask: Arr
                     if (arrTask[position].calTIM.toString() != "-1")
                         calendar.timeInMillis = arrTask[position].calTIM
                     dateSet = true
+                    createNotChannel()
                 }
                 btnDelDialog.setOnClickListener {
                     val delDialog: AlertDialog.Builder = AlertDialog.Builder(context)
@@ -148,17 +162,19 @@ class RecyclerTaskAdapter(private val context: Context, private val arrTask: Arr
                     if (text.isBlank()) {
                         holder.showToast("Task Name is Needed!")
                     } else {
-                        val new = Task(arrTask[position].id, text, description, 0, calendar.timeInMillis)
+                        val new =
+                            Task(arrTask[position].id, text, description, 0, calendar.timeInMillis)
                         db.taskDao().editTask(new)
                         (context).showTasks(0)
+                        setAlarm(arrTask[position].id)
                     }
                     dateSet = false
                     edit.dismiss()
                 }
                 true
             }
-        } else if (context is DoneTasksActivity){
-            tick.setOnLongClickListener{
+        } else if (context is DoneTasksActivity) {
+            tick.setOnLongClickListener {
 
                 val delDialog: AlertDialog.Builder = AlertDialog.Builder(context)
                 delDialog.setTitle("Delete Task?")
@@ -182,7 +198,7 @@ class RecyclerTaskAdapter(private val context: Context, private val arrTask: Arr
                 }
                 delDialog.show()
 
-            true
+                true
             }
         }
 
@@ -212,10 +228,8 @@ class RecyclerTaskAdapter(private val context: Context, private val arrTask: Arr
     }
 
     private fun showDatePicker(context: Context) {
-        if (txtReminder.text.toString() != "") {
-            calendar.time = DateFormat.getDateInstance().parse(txtReminder.text.toString())!!
-        }
-        else {
+
+        if (txtReminder.text.toString() == "") {
             calendar.time = Date(System.currentTimeMillis())
         }
 
@@ -223,14 +237,70 @@ class RecyclerTaskAdapter(private val context: Context, private val arrTask: Arr
         val month = calendar.get(Calendar.MONTH)
         val dayOfMonth = calendar.get(Calendar.DAY_OF_MONTH)
 
-        val dPD = DatePickerDialog(context, this, year, month, dayOfMonth)
+        val dPD = DatePickerDialog(
+            context, { _, selectedYear, selectedMonth, selectedDayOfMonth ->
+                val selectedDate = calendar
+                selectedDate.set(selectedYear, selectedMonth, selectedDayOfMonth)
+
+                // After selecting the date, show the TimePickerDialog
+                showTimePickerDialog(selectedDate)
+            }, year, month, dayOfMonth
+        )
         dPD.datePicker.minDate = Calendar.getInstance().timeInMillis
         dPD.show()
     }
-    override fun onDateSet(view: DatePicker?, year: Int, month: Int, dayOfMonth: Int) {
-        calendar.set(year, month, dayOfMonth)
-        txtReminder.visibility = View.VISIBLE
-        txtReminder.text = DateFormat.getDateInstance().format(Date(calendar.timeInMillis))
-        dateSet = true
+
+    override fun onDateSet(view: DatePicker?, year: Int, month: Int, dayOfMonth: Int) {   }
+
+
+    //    Check if the task has been marked as done. Then the alarm should be cancelled.
+    private fun setAlarm(id: Int) {
+        alarmManager = context.getSystemService(AppCompatActivity.ALARM_SERVICE) as AlarmManager
+        val intent = Intent(context, MyBroadcastReceiver::class.java)
+        intent.putExtra("id", id)
+        intent.putExtra("taskName", db.taskDao().getTaskName(id).toString())
+        pendingIntent =
+            PendingIntent.getBroadcast(context, id, intent, PendingIntent.FLAG_IMMUTABLE)
+
+        alarmManager.set(AlarmManager.RTC_WAKEUP, calendar.timeInMillis, pendingIntent)
     }
+
+    private fun createNotChannel() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val name = "Task Reminder"
+            val desc =
+                "This is the notification for the a task's reminder that you can set by holding a task in Pending tasks screen!"
+            val imp = NotificationManager.IMPORTANCE_HIGH
+            val channel = NotificationChannel(CHANNEL_ID, name, imp)
+            channel.lightColor = Color.GREEN   // what?
+            channel.enableVibration(true)
+            channel.description = desc
+            getSystemService(context, NotificationManager::class.java)?.createNotificationChannel(
+                channel
+            )
+        }
+    }
+
+    private fun showTimePickerDialog(selectedDate: Calendar) {
+        val hourOfDay = selectedDate.get(Calendar.HOUR_OF_DAY)
+        val minute = selectedDate.get(Calendar.MINUTE)
+
+        val timePickerDialog = TimePickerDialog(
+            context, { _, selHourOfDay, selMinute ->
+                selectedDate.set(Calendar.HOUR_OF_DAY, selHourOfDay)
+                selectedDate.set(Calendar.MINUTE, selMinute)
+                if (selectedDate.timeInMillis != Calendar.getInstance().timeInMillis) {
+                    txtReminder.visibility = View.VISIBLE
+                    calendar = selectedDate
+                    txtReminder.text = SimpleDateFormat(
+                        "h:mm a d/M/yy", Locale.getDefault()
+                    ).format((calendar.time))
+                    dateSet = true
+                }
+            }, hourOfDay, minute, false
+        )
+        timePickerDialog.show()
+    }
+
+
 }
