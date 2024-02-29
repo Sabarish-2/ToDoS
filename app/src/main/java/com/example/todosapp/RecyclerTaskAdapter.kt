@@ -63,9 +63,7 @@ class RecyclerTaskAdapter(private val context: Context, private val arrTask: Arr
         return ViewHolder(LayoutInflater.from(context).inflate(R.layout.task_row, parent, false))
     }
 
-    override fun getItemCount(): Int {
-        return arrTask.size
-    }
+    override fun getItemCount(): Int { return arrTask.size }
 
 
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
@@ -76,16 +74,12 @@ class RecyclerTaskAdapter(private val context: Context, private val arrTask: Arr
         calendar = Calendar.getInstance()
         if (arrTask[position].calTIM.toString() != "-1") {
             calendar.timeInMillis = arrTask[position].calTIM
-            holder.txtRemTR.text =
-                SimpleDateFormat("h:mm a\nd/M/yy", Locale.getDefault()).format(calendar.time)
-        } else
-            holder.txtRemTR.text = ""
+            holder.txtRemTR.text = SimpleDateFormat("h:mm a\nd/M/yy", Locale.getDefault()).format(calendar.time)
+        } else holder.txtRemTR.text = ""
 
 
-        if (holder.taskDescription.text.isNotBlank())
-            holder.taskDescription.visibility = View.VISIBLE
-        if (holder.txtRemTR.text.isNotBlank())
-            holder.txtRemTR.visibility = View.VISIBLE
+        if (holder.taskDescription.text.isNotBlank()) holder.taskDescription.visibility = View.VISIBLE
+        if (holder.txtRemTR.text.isNotBlank()) holder.txtRemTR.visibility = View.VISIBLE
 
         val tick = holder.lLRow
         if (context is MainActivity) {
@@ -107,10 +101,8 @@ class RecyclerTaskAdapter(private val context: Context, private val arrTask: Arr
 
 
                 if (arrTask[position].calTIM.toString() != "-1") {
-                    txtReminder.text = SimpleDateFormat(
-                        "h:mm a d/M/yy",
-                        Locale.getDefault()
-                    ).format((calendar.time))
+                    calendar.timeInMillis = arrTask[position].calTIM
+                    txtReminder.text = SimpleDateFormat("h:mm a d/M/yy", Locale.getDefault()).format((calendar.time))
                     txtReminder.visibility = View.VISIBLE
                 }
                 edtTaskName.setText(holder.taskName.text)
@@ -118,16 +110,11 @@ class RecyclerTaskAdapter(private val context: Context, private val arrTask: Arr
                 btnAddDialog.text = getString(context, R.string.btn_done)
                 btnDelDialog.visibility = View.VISIBLE
 
-                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-                    context.requestFocusNew(edtTaskName)
-                } else {
-                    context.requestFocus(edtTaskName)
-                }
+                if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) { context.requestFocusNew(edtTaskName) } else { context.requestFocus(edtTaskName) }
 
                 btnSetDue.setOnClickListener {
                     showDatePicker(context)
-                    if (arrTask[position].calTIM.toString() != "-1")
-                        calendar.timeInMillis = arrTask[position].calTIM
+                    if (arrTask[position].calTIM.toString() != "-1") calendar.timeInMillis = arrTask[position].calTIM
                     dateSet = true
                     createNotChannel()
                 }
@@ -144,6 +131,8 @@ class RecyclerTaskAdapter(private val context: Context, private val arrTask: Arr
                             arrTask[position].img,
                             arrTask[position].calTIM
                         )
+
+                        deleteAlarm(position)
                         db.taskDao().delTask(new)
                         dialog.dismiss()
                         edit.dismiss()
@@ -157,8 +146,7 @@ class RecyclerTaskAdapter(private val context: Context, private val arrTask: Arr
                 btnAddDialog.setOnClickListener {
                     val text = edtTaskName.text.toString()
                     val description = edtTaskDescription.text.toString()
-                    if (!dateSet)
-                        calendar.timeInMillis = arrTask[position].calTIM
+                    if (!dateSet) calendar.timeInMillis = arrTask[position].calTIM
                     if (text.isBlank()) {
                         holder.showToast("Task Name is Needed!")
                     } else {
@@ -166,7 +154,7 @@ class RecyclerTaskAdapter(private val context: Context, private val arrTask: Arr
                             Task(arrTask[position].id, text, description, 0, calendar.timeInMillis)
                         db.taskDao().editTask(new)
                         (context).showTasks(0)
-                        setAlarm(arrTask[position].id)
+                        setAlarm(position)
                     }
                     dateSet = false
                     edit.dismiss()
@@ -189,6 +177,7 @@ class RecyclerTaskAdapter(private val context: Context, private val arrTask: Arr
                         arrTask[position].img,
                         arrTask[position].calTIM
                     )
+                    deleteAlarm(position)
                     db.taskDao().delTask(new)
                     dialog.dismiss()
                     (context).showTasks(1)
@@ -202,36 +191,44 @@ class RecyclerTaskAdapter(private val context: Context, private val arrTask: Arr
             }
         }
 
+    //    Check if the task has been marked as done or undone. Then the alarm should be cancelled or set!
         tick.setOnClickListener {
             if (context is MainActivity) {
-                val new = Task(
-                    /* id = */ arrTask[position].id,
+                val new = Task(/* id = */ arrTask[position].id,
                     /* name = */ arrTask[position].name,
                     /* description = */ arrTask[position].description,
                     /* status = */ 1,
-                    arrTask[position].calTIM
-                )
+                    /* calTIM = */ arrTask[position].calTIM)
+                deleteAlarm(position)
                 db.taskDao().editTask(new)
                 (context).showTasks(0)
             } else {
-                val new = Task(
-                    /* id = */ arrTask[position].id,
-                    /* name = */ arrTask[position].name,
-                    /* description = */ arrTask[position].description,
-                    /* status = */ 0,
+                val new = Task(/* id = */ arrTask[position].id,/* name = */
+                    arrTask[position].name,/* description = */
+                    arrTask[position].description,/* status = */
+                    0,
                     arrTask[position].calTIM
                 )
+                val calTIM = arrTask[position].calTIM
+                if (calTIM > Calendar.getInstance().timeInMillis)
+                    setAlarm(position)
                 db.taskDao().editTask(new)
                 (context as DoneTasksActivity).showTasks(1)
             }
         }
     }
 
+    private fun deleteAlarm(pos: Int) {
+        val id = arrTask[pos].id
+        alarmManager = context.getSystemService(AppCompatActivity.ALARM_SERVICE) as AlarmManager
+        val intent = Intent(context, MyBroadcastReceiver::class.java)
+        pendingIntent = PendingIntent.getBroadcast(context, id, intent, PendingIntent.FLAG_IMMUTABLE)
+        alarmManager.cancel(pendingIntent)
+    }
+
     private fun showDatePicker(context: Context) {
 
-        if (txtReminder.text.toString() == "") {
-            calendar.time = Date(System.currentTimeMillis())
-        }
+        if (txtReminder.text.toString() == "") calendar.time = Date(System.currentTimeMillis())
 
         val year = calendar.get(Calendar.YEAR)
         val month = calendar.get(Calendar.MONTH)
@@ -250,17 +247,23 @@ class RecyclerTaskAdapter(private val context: Context, private val arrTask: Arr
         dPD.show()
     }
 
-    override fun onDateSet(view: DatePicker?, year: Int, month: Int, dayOfMonth: Int) {   }
+    override fun onDateSet(view: DatePicker?, year: Int, month: Int, dayOfMonth: Int) {}
 
 
-    //    Check if the task has been marked as done. Then the alarm should be cancelled.
-    private fun setAlarm(id: Int) {
+    private fun setAlarm(pos: Int) {
+        calendar.timeInMillis = arrTask[pos].calTIM
+        if (calendar.timeInMillis < Calendar.getInstance().timeInMillis)
+        {
+            deleteAlarm(pos)
+            return
+        }
+
+        val id = arrTask[pos].id
         alarmManager = context.getSystemService(AppCompatActivity.ALARM_SERVICE) as AlarmManager
         val intent = Intent(context, MyBroadcastReceiver::class.java)
         intent.putExtra("id", id)
         intent.putExtra("taskName", db.taskDao().getTaskName(id).toString())
-        pendingIntent =
-            PendingIntent.getBroadcast(context, id, intent, PendingIntent.FLAG_IMMUTABLE)
+        pendingIntent = PendingIntent.getBroadcast(context, id, intent, PendingIntent.FLAG_IMMUTABLE)
 
         alarmManager.set(AlarmManager.RTC_WAKEUP, calendar.timeInMillis, pendingIntent)
     }
@@ -292,15 +295,11 @@ class RecyclerTaskAdapter(private val context: Context, private val arrTask: Arr
                 if (selectedDate.timeInMillis != Calendar.getInstance().timeInMillis) {
                     txtReminder.visibility = View.VISIBLE
                     calendar = selectedDate
-                    txtReminder.text = SimpleDateFormat(
-                        "h:mm a d/M/yy", Locale.getDefault()
-                    ).format((calendar.time))
+                    txtReminder.text = SimpleDateFormat("h:mm a d/M/yy", Locale.getDefault()).format((calendar.time))
                     dateSet = true
                 }
             }, hourOfDay, minute, false
         )
         timePickerDialog.show()
     }
-
-
 }

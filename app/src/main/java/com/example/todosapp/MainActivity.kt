@@ -98,7 +98,6 @@ class MainActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener {
     }
 
     fun showTasks(taskStatus: Int) {
-        calendar = Calendar.getInstance()
         val arrTask = ArrayList<TaskModel>()
         recyclerView = findViewById(R.id.recyclerView)
         recyclerAdapter = RecyclerTaskAdapter(this, arrTask)
@@ -115,6 +114,7 @@ class MainActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener {
             }
         }
         if (task.size == 0) {
+            calendar = Calendar.getInstance()
             db.taskDao().addTask(Task(-1, "name", null, -1, -1))
             db.taskDao().addTask(
                 Task(
@@ -209,13 +209,8 @@ class MainActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener {
 
         btnSetDue.setOnClickListener {
             if (Build.VERSION.SDK_INT >= VERSION_CODES.TIRAMISU) {
-                if (ContextCompat.checkSelfPermission(
-                        this, android.Manifest.permission.POST_NOTIFICATIONS
-                    ) != PackageManager.PERMISSION_GRANTED
-                ) {
-                    ActivityCompat.requestPermissions(
-                        this, arrayOf(android.Manifest.permission.POST_NOTIFICATIONS), 101
-                    )
+                if (ContextCompat.checkSelfPermission(this, android.Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
+                    ActivityCompat.requestPermissions(this, arrayOf(android.Manifest.permission.POST_NOTIFICATIONS), 101)
                 }
             }
             showDatePicker()
@@ -331,7 +326,5 @@ class MainActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener {
         inputMethodManager.showSoftInput(edtTaskName, InputMethodManager.SHOW_IMPLICIT)
     }
 
-    override fun onDateSet(view: DatePicker?, year: Int, month: Int, dayOfMonth: Int) {
-//        Nothing
-    }
+    override fun onDateSet(view: DatePicker?, year: Int, month: Int, dayOfMonth: Int) {}
 }
