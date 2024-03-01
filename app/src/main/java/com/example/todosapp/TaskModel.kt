@@ -6,5 +6,7 @@ class TaskModel(
     var description: String?,
     var id: Int,
     var calTIM: Long,
+    var rep: Int,
+    var freq: Int,
 )
 

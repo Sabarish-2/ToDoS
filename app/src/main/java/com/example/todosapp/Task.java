@@ -12,20 +12,28 @@ public class Task {
     private int id;
     @ColumnInfo(name = "name")
     private String name;
+    @ColumnInfo(name = "status")
+    private int status;
 
 
-    public Task(int id, String name, int status) {
+    Task(int id, String name, int status, long calTIM, int rep, int freq) {
         this.id = id;
         this.name = name;
         this.status = status;
+        this.calTIM = calTIM;
+        this.freq = freq;
+        this.rep = rep;
     }
 
     @ColumnInfo(name = "description")
     private String description;
-    @ColumnInfo(name = "status")
-    private int status;
     @ColumnInfo(name = "date")
     private long calTIM;
+    @ColumnInfo(name = "rep")
+    private int rep;
+
+    @ColumnInfo(name = "freq")
+    private int freq;
 
     @Ignore
     Task(int id, String name, String description, int status, long calTIM) {
@@ -37,6 +45,35 @@ public class Task {
     }
 
     @Ignore
+     Task(int id, String name, int status, int rep, int freq) {
+        this.id = id;
+        this.name = name;
+        this.status = status;
+        this.freq = freq;
+        this.rep = rep;
+    }
+    @Ignore
+    Task(int id, String name, String description, int status, long calTIM, int rep, int freq) {
+        this.id = id;
+        this.name = name;
+        this.description = description;
+        this.status = status;
+        this.calTIM = calTIM;
+        this.freq = freq;
+        this.rep = rep;
+    }
+
+    @Ignore
+    Task(String name, String description, int status, long calTIM, int rep, int freq) {
+        this.name = name;
+        this.description = description;
+        this.status = status;
+        this.calTIM = calTIM;
+        this.freq = freq;
+        this.rep = rep;
+    }
+
+    @Ignore
     Task(String name, String description, int status, long calTIM) {
         this.name = name;
         this.description = description;
@@ -44,35 +81,20 @@ public class Task {
         this.calTIM = calTIM;
     }
 
-    public int getId() {
-        return id;
-    }
-    public void setId(int id) {
-        this.id = id;
-    }
-    public String getName() {
-        return name;
-    }
-    public void setName(String name) {
-        this.name = name;
-    }
-    public String getDescription() {
-        return description;
-    }
-    public void setDescription(String description) {
-        this.description = description;
-    }
-    public int getStatus() {
-        return status;
-    }
-    public void setCalTIM(long calTIM) {
-        this.calTIM = calTIM;
-    }
-    public long getCalTIM() {
-        return calTIM;
-    }
-    public void setStatus(int status) {
-        this.status = status;
-    }
+    public int getId() {return id;}
+    public void setId(int id) {this.id = id;}
+    public String getName() {return name;}
+    public void setName(String name) {this.name = name;}
+    public String getDescription() {return description;}
+    public void setDescription(String description) {this.description = description;}
+    public int getStatus() {return status;}
+    public void setCalTIM(long calTIM) {this.calTIM = calTIM;}
+    public int getRep() {return rep;}
+
+    public void setRep(int rep) {this.rep = rep;}
+    public int getFreq() {return freq;}
+    public void setFreq(int freq) {this.freq = freq;}
+    public long getCalTIM() {return calTIM;}
+    public void setStatus(int status) {this.status = status;}
 
 }

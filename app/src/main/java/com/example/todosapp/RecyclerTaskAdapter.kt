@@ -154,6 +154,7 @@ class RecyclerTaskAdapter(private val context: Context, private val arrTask: Arr
                             Task(arrTask[position].id, text, description, 0, calendar.timeInMillis)
                         db.taskDao().editTask(new)
                         (context).showTasks(0)
+                        deleteAlarm(position)
                         setAlarm(position)
                     }
                     dateSet = false
@@ -222,7 +223,7 @@ class RecyclerTaskAdapter(private val context: Context, private val arrTask: Arr
         val id = arrTask[pos].id
         alarmManager = context.getSystemService(AppCompatActivity.ALARM_SERVICE) as AlarmManager
         val intent = Intent(context, MyBroadcastReceiver::class.java)
-        pendingIntent = PendingIntent.getBroadcast(context, id, intent, PendingIntent.FLAG_IMMUTABLE)
+        pendingIntent = PendingIntent.getBroadcast(context, id, intent, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
         alarmManager.cancel(pendingIntent)
     }
 
@@ -251,9 +252,7 @@ class RecyclerTaskAdapter(private val context: Context, private val arrTask: Arr
 
 
     private fun setAlarm(pos: Int) {
-        calendar.timeInMillis = arrTask[pos].calTIM
-        if (calendar.timeInMillis < Calendar.getInstance().timeInMillis)
-        {
+        if (calendar.timeInMillis < Calendar.getInstance().timeInMillis) {
             deleteAlarm(pos)
             return
         }
@@ -263,7 +262,7 @@ class RecyclerTaskAdapter(private val context: Context, private val arrTask: Arr
         val intent = Intent(context, MyBroadcastReceiver::class.java)
         intent.putExtra("id", id)
         intent.putExtra("taskName", db.taskDao().getTaskName(id).toString())
-        pendingIntent = PendingIntent.getBroadcast(context, id, intent, PendingIntent.FLAG_IMMUTABLE)
+        pendingIntent = PendingIntent.getBroadcast(context, id, intent, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
 
         alarmManager.set(AlarmManager.RTC_WAKEUP, calendar.timeInMillis, pendingIntent)
     }

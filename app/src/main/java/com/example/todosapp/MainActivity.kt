@@ -108,7 +108,7 @@ class MainActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener {
             if (i.status == taskStatus) {
                 arrTask.add(
                     TaskModel(
-                        R.drawable.no_tick_box, i.name, i.description, i.id, i.calTIM
+                        R.drawable.no_tick_box, i.name, i.description, i.id, i.calTIM, i.rep, i.freq
                     )
                 )
             }
@@ -242,15 +242,13 @@ class MainActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener {
         }
     }
 
-//    Check if the task has been marked as done. Then the alarm should be cancelled.
-
     private fun setAlarm(id: Int) {
+        if (calendar.timeInMillis < Calendar.getInstance().timeInMillis) return
         alarmManager = getSystemService(ALARM_SERVICE) as AlarmManager
         val intent = Intent(this, MyBroadcastReceiver::class.java)
         intent.putExtra("id", id)
         intent.putExtra("taskName", db.taskDao().getTaskName(id).toString())
-        pendingIntent = PendingIntent.getBroadcast(this, id, intent, PendingIntent.FLAG_IMMUTABLE)
-
+        pendingIntent = PendingIntent.getBroadcast(this, id, intent, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
         alarmManager.set(AlarmManager.RTC_WAKEUP, calendar.timeInMillis, pendingIntent)
     }
 
