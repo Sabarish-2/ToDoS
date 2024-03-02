@@ -21,8 +21,8 @@ public class Task {
         this.name = name;
         this.status = status;
         this.calTIM = calTIM;
-        this.freq = freq;
         this.rep = rep;
+        this.freq = freq;
     }
 
     @ColumnInfo(name = "description")
@@ -44,14 +44,7 @@ public class Task {
         this.calTIM = calTIM;
     }
 
-    @Ignore
-     Task(int id, String name, int status, int rep, int freq) {
-        this.id = id;
-        this.name = name;
-        this.status = status;
-        this.freq = freq;
-        this.rep = rep;
-    }
+
     @Ignore
     Task(int id, String name, String description, int status, long calTIM, int rep, int freq) {
         this.id = id;
@@ -73,13 +66,6 @@ public class Task {
         this.rep = rep;
     }
 
-    @Ignore
-    Task(String name, String description, int status, long calTIM) {
-        this.name = name;
-        this.description = description;
-        this.status = status;
-        this.calTIM = calTIM;
-    }
 
     public int getId() {return id;}
     public void setId(int id) {this.id = id;}
@@ -88,10 +74,8 @@ public class Task {
     public String getDescription() {return description;}
     public void setDescription(String description) {this.description = description;}
     public int getStatus() {return status;}
-    public void setCalTIM(long calTIM) {this.calTIM = calTIM;}
     public int getRep() {return rep;}
 
-    public void setRep(int rep) {this.rep = rep;}
     public int getFreq() {return freq;}
     public void setFreq(int freq) {this.freq = freq;}
     public long getCalTIM() {return calTIM;}

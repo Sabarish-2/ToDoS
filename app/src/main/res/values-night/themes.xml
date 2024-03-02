@@ -15,8 +15,8 @@
     </style>
 
     <style name="DIALOG_BUTTON">
-        <item name="android:textColor">#FFE4C9</item>
-        <item name="backgroundTint">#B68C10</item>
+        <item name="android:textColor">#FAFFFEFC</item>
+        <item name="backgroundTint">#99B68C10</item>
     </style>
 
     <style name="DIALOG_DEL_BUTTON">

@@ -13,4 +13,10 @@
     <string name="task_description_dialog">Task Description (optional)</string>
     <string name="tick_mark_description">Tick Mark for Task completion status</string>
     <string name="set_due_date">Set Reminder</string>
+    <string-array name="repeat">
+        <item>No Repeat</item>
+        <item>Daily</item>
+        <item>Weekly</item>
+        <item>Monthly</item>
+    </string-array>
 </resources>

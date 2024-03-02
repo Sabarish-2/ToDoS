@@ -1,5 +1,6 @@
 package com.example.todosapp
 
+import android.annotation.SuppressLint
 import android.app.AlarmManager
 import android.app.AlertDialog
 import android.app.DatePickerDialog
@@ -19,9 +20,11 @@ import android.view.Menu
 import android.view.MenuItem
 import android.view.View
 import android.view.inputmethod.InputMethodManager
+import android.widget.AdapterView
 import android.widget.Button
 import android.widget.DatePicker
 import android.widget.EditText
+import android.widget.Spinner
 import android.widget.TextView
 import android.widget.Toast
 import androidx.activity.OnBackPressedCallback
@@ -88,6 +91,21 @@ class MainActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener {
 
         }
         onBackPressedDispatcher.addCallback(onBackPressedCallback)
+
+        calendar = Calendar.getInstance().apply {
+            timeInMillis = System.currentTimeMillis()
+            set(Calendar.HOUR_OF_DAY, 0)
+            set(Calendar.MINUTE, 30)
+        }
+
+        alarmManager = getSystemService(ALARM_SERVICE) as AlarmManager
+        val intent = Intent(this, MyBroadcastReceiver::class.java).apply {
+            putExtra("id", -2)
+        }
+        pendingIntent = PendingIntent.getBroadcast(
+            this, -2, intent, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+        alarmManager.setInexactRepeating(AlarmManager.RTC, calendar.timeInMillis, AlarmManager.INTERVAL_DAY, pendingIntent)
 
         createNotChannel()
     }
@@ -172,7 +190,6 @@ class MainActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener {
         }
     }
 
-
     override fun onCreateOptionsMenu(menu: Menu?): Boolean {
         menuInflater.inflate(R.menu.opt_toolbar, menu)
         return super.onCreateOptionsMenu(menu)
@@ -200,6 +217,22 @@ class MainActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener {
         txtReminder = add.findViewById(R.id.txtReminder)
         val btnSetDue = add.findViewById<Button>(R.id.btn_set_due)
         val edtTaskDescription = add.findViewById<EditText>(R.id.edtTaskDescription)
+        val spRep = add.findViewById<Spinner>(R.id.spRep)
+        var rep = 0
+
+        spRep.onItemSelectedListener = object: AdapterView.OnItemSelectedListener{
+            override fun onItemSelected(
+                parent: AdapterView<*>?,
+                view: View?,
+                position: Int,
+                id: Long
+            ) {
+                rep = position
+            }
+
+            override fun onNothingSelected(parent: AdapterView<*>?) {}
+        }
+
         if (Build.VERSION.SDK_INT >= VERSION_CODES.R) {
             requestFocusNew(edtTaskName)
         } else {
@@ -209,8 +242,13 @@ class MainActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener {
 
         btnSetDue.setOnClickListener {
             if (Build.VERSION.SDK_INT >= VERSION_CODES.TIRAMISU) {
-                if (ContextCompat.checkSelfPermission(this, android.Manifest.permission.POST_NOTIFICATIONS) != PackageManager.PERMISSION_GRANTED) {
-                    ActivityCompat.requestPermissions(this, arrayOf(android.Manifest.permission.POST_NOTIFICATIONS), 101)
+                if (ContextCompat.checkSelfPermission(
+                        this, android.Manifest.permission.POST_NOTIFICATIONS
+                    ) != PackageManager.PERMISSION_GRANTED
+                ) {
+                    ActivityCompat.requestPermissions(
+                        this, arrayOf(android.Manifest.permission.POST_NOTIFICATIONS), 101
+                    )
                 }
             }
             showDatePicker()
@@ -220,6 +258,7 @@ class MainActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener {
             val text = edtTaskName.text.toString()
             val desc = edtTaskDescription.text.toString()
             val status = 0
+//            var daysLeft : Int
             if (text.isBlank()) {
                 val toast = Toast.makeText(this, "Task Name is needed!", Toast.LENGTH_SHORT)
                 toast.show()
@@ -229,7 +268,12 @@ class MainActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener {
                 } else {
                     -1
                 }
-                db.taskDao().addTask(Task(text, desc, status, rem))
+                val freq = if (dateSet) {
+                    -((calendar.timeInMillis - Calendar.getInstance().timeInMillis) / (1000 * 60 * 60 * 24)).toInt()
+                } else {
+                    0
+                }
+                db.taskDao().addTask(Task(text, desc, status, rem, rep, freq))
                 val id = db.taskDao().getTaskId(text, status)
                 if (dateSet) {
                     setAlarm(id)
@@ -242,14 +286,17 @@ class MainActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener {
         }
     }
 
+    @SuppressLint("MissingPermission")
     private fun setAlarm(id: Int) {
         if (calendar.timeInMillis < Calendar.getInstance().timeInMillis) return
         alarmManager = getSystemService(ALARM_SERVICE) as AlarmManager
         val intent = Intent(this, MyBroadcastReceiver::class.java)
         intent.putExtra("id", id)
         intent.putExtra("taskName", db.taskDao().getTaskName(id).toString())
-        pendingIntent = PendingIntent.getBroadcast(this, id, intent, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE)
-        alarmManager.set(AlarmManager.RTC_WAKEUP, calendar.timeInMillis, pendingIntent)
+        pendingIntent = PendingIntent.getBroadcast(
+            this, id, intent, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+        )
+        alarmManager.setExact(AlarmManager.RTC_WAKEUP, calendar.timeInMillis, pendingIntent)
     }
 
     private fun createNotChannel() {
@@ -316,6 +363,7 @@ class MainActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener {
         edtTaskName.requestFocus()
         edtTaskName.windowInsetsController?.show(WindowInsetsCompat.Type.ime())
     }
+
     fun requestFocus(edtTaskName: EditText) {
         edtTaskName.requestFocus()
         // Show the keyboard
