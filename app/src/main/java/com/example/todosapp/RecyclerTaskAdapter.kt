@@ -66,7 +66,6 @@ class RecyclerTaskAdapter(private val context: Context, private val arrTask: Arr
         return arrTask.size
     }
 
-
     override fun onBindViewHolder(holder: ViewHolder, position: Int) {
         holder.taskStatus.setImageResource(arrTask[position].img)
         holder.taskName.text = arrTask[position].name
@@ -221,21 +220,25 @@ class RecyclerTaskAdapter(private val context: Context, private val arrTask: Arr
 
         tick.setOnClickListener {
             if (context is MainActivity) {
-                val new = Task(/* id = */ arrTask[position].id,
-                    /* name = */ arrTask[position].name,
-                    /* description = */ arrTask[position].description,
-                    /* status = */ 1,
-                    /* calTIM = */ arrTask[position].calTIM
+                val new = Task(arrTask[position].id,
+                    arrTask[position].name,
+                    arrTask[position].description,
+                    1,
+                    arrTask[position].calTIM,
+                    arrTask[position].rep,
+                    arrTask[position].freq
                 )
                 deleteAlarm(arrTask[position].id, context)
                 db.taskDao().editTask(new)
                 (context).showTasks(0)
             } else {
-                val new = Task(/* id = */ arrTask[position].id,/* name = */
-                    arrTask[position].name,/* description = */
-                    arrTask[position].description,/* status = */
+                val new = Task(/* id = */ arrTask[position].id,
+                    arrTask[position].name,
+                    arrTask[position].description,
                     0,
-                    arrTask[position].calTIM
+                    arrTask[position].calTIM,
+                    arrTask[position].rep,
+                    arrTask[position].freq
                 )
                 val calTIM = arrTask[position].calTIM
                 if (calTIM > Calendar.getInstance().timeInMillis)
@@ -245,7 +248,6 @@ class RecyclerTaskAdapter(private val context: Context, private val arrTask: Arr
             }
         }
     }
-
 
     private fun showDatePicker(context: Context) {
 
@@ -352,8 +354,5 @@ class RecyclerTaskAdapter(private val context: Context, private val arrTask: Arr
 
             alarmManager.set(AlarmManager.RTC_WAKEUP, calendar.timeInMillis, pendingIntent)
         }
-
     }
-
-
 }

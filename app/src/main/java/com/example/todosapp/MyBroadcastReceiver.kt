@@ -12,9 +12,9 @@ import androidx.core.app.NotificationCompat
 import androidx.core.app.NotificationManagerCompat
 import java.util.Calendar
 
+private const val CHANNEL_ID = "Task Reminder"
 class MyBroadcastReceiver : BroadcastReceiver() {
 
-    private val CHANNEL_ID = "Task Reminder"
 
     override fun onReceive(context: Context?, intent: Intent?) {
         val taskName = intent?.getStringExtra("taskName")
@@ -52,7 +52,7 @@ class MyBroadcastReceiver : BroadcastReceiver() {
                 this.notify(id, builder.build())
             }
         }
-        else if (id == -1) {
+        else if (id == -2) {
             val db: LocalDB = LocalDB.getDB(context)
             val taskList = db.taskDao().allTask.toMutableList()
             for (i in taskList)
@@ -61,17 +61,20 @@ class MyBroadcastReceiver : BroadcastReceiver() {
                 if (i.rep == 1 || (i.rep == 2 && i.freq % 7 == 0) || (i.rep == 3 && i.freq % 30 == 0))
                 {
                     i.status = 0
+                    i.freq = 0
                     if (i.calTIM.toString() != "-1")
                     {
                         val calendar = Calendar.getInstance()
-                        calendar.apply {
-                            timeInMillis = i.calTIM
-                            set(Calendar.DAY_OF_MONTH, Calendar.getInstance().get(Calendar.DAY_OF_MONTH))
-                        }
+                        calendar.timeInMillis = i.calTIM
+                        calendar.set(Calendar.DAY_OF_MONTH, Calendar.getInstance().get(Calendar.DAY_OF_MONTH))
+                        calendar.set(Calendar.MONTH, Calendar.getInstance().get(Calendar.MONTH))
+                        calendar.set(Calendar.YEAR, Calendar.getInstance().get(Calendar.YEAR))
+                        i.calTIM = calendar.timeInMillis
+                        db.taskDao().editTask(i)
                         RecyclerTaskAdapter.setAlarm(i.id, context!!)
                     }
                 }
-                db.taskDao().editTask(i)
+                else db.taskDao().editTask(i)
             }
         }
     }

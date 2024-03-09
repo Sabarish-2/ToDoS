@@ -61,6 +61,7 @@ class MainActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener {
         setContentView(R.layout.activity_main)
 
         toolBar = findViewById(R.id.toolBar)
+        repeatCheck(this)
 
         setSupportActionBar(toolBar)
         supportActionBar?.title = "To Do S App"
@@ -92,23 +93,12 @@ class MainActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener {
         }
         onBackPressedDispatcher.addCallback(onBackPressedCallback)
 
-        calendar = Calendar.getInstance().apply {
-            timeInMillis = System.currentTimeMillis()
-            set(Calendar.HOUR_OF_DAY, 0)
-            set(Calendar.MINUTE, 30)
-        }
 
-        alarmManager = getSystemService(ALARM_SERVICE) as AlarmManager
-        val intent = Intent(this, MyBroadcastReceiver::class.java).apply {
-            putExtra("id", -2)
-        }
-        pendingIntent = PendingIntent.getBroadcast(
-            this, -2, intent, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
-        )
-        alarmManager.setInexactRepeating(AlarmManager.RTC, calendar.timeInMillis, AlarmManager.INTERVAL_DAY, pendingIntent)
 
         createNotChannel()
     }
+
+
 
     override fun onResume() {
         showTasks(0)
@@ -125,10 +115,14 @@ class MainActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener {
         for (i in task) {
             if (i.status == taskStatus) {
                 arrTask.add(
-                    TaskModel(
-                        R.drawable.no_tick_box, i.name, i.description, i.id, i.calTIM, i.rep, i.freq
-                    )
+                    TaskModel(R.drawable.no_tick_box, i.name, i.description, i.id, i.calTIM, i.rep, i.freq)
                 )
+                if (i.calTIM != -1L)
+                {
+                    calendar = Calendar.getInstance()
+                    calendar.timeInMillis = i.calTIM
+                    setAlarm(i.id)
+                }
             }
         }
         if (task.size == 0) {
@@ -206,6 +200,7 @@ class MainActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener {
     }
 
     private lateinit var txtReminder: TextView
+    private var rep = 0
 
     private fun newTask() {
         calendar = Calendar.getInstance()
@@ -218,8 +213,8 @@ class MainActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener {
         val btnSetDue = add.findViewById<Button>(R.id.btn_set_due)
         val edtTaskDescription = add.findViewById<EditText>(R.id.edtTaskDescription)
         val spRep = add.findViewById<Spinner>(R.id.spRep)
-        var rep = 0
 
+        rep = 0
         spRep.onItemSelectedListener = object: AdapterView.OnItemSelectedListener{
             override fun onItemSelected(
                 parent: AdapterView<*>?,
@@ -373,4 +368,31 @@ class MainActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener {
     }
 
     override fun onDateSet(view: DatePicker?, year: Int, month: Int, dayOfMonth: Int) {}
+
+    companion object {
+        fun repeatCheck(context: Context)  {
+            val calendar = Calendar.getInstance().apply {
+                timeInMillis = System.currentTimeMillis()
+                set(Calendar.HOUR_OF_DAY, 0)
+                set(Calendar.MINUTE, 30)
+            }
+
+            val alarmManager = context.getSystemService(ALARM_SERVICE) as AlarmManager
+            val intent = Intent(context, MyBroadcastReceiver::class.java).apply {
+                putExtra("id", -2)
+            }
+            val pendingIntent = PendingIntent.getBroadcast(
+                context, -2, intent, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+            )
+            alarmManager.setInexactRepeating(
+                AlarmManager.RTC,
+                calendar.timeInMillis,
+//                Debug:
+//                60000,
+                AlarmManager.INTERVAL_DAY,
+                pendingIntent
+            )
+        }
+    }
+
 }

@@ -27,6 +27,8 @@ public class Task {
 
     @ColumnInfo(name = "description")
     private String description;
+
+
     @ColumnInfo(name = "date")
     private long calTIM;
     @ColumnInfo(name = "rep")
@@ -80,5 +82,5 @@ public class Task {
     public void setFreq(int freq) {this.freq = freq;}
     public long getCalTIM() {return calTIM;}
     public void setStatus(int status) {this.status = status;}
-
+    public void setCalTIM(long calTIM) {this.calTIM = calTIM;}
 }
