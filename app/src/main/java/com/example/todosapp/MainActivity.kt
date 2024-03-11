@@ -1,6 +1,5 @@
 package com.example.todosapp
 
-import android.annotation.SuppressLint
 import android.app.AlarmManager
 import android.app.AlertDialog
 import android.app.DatePickerDialog
@@ -281,7 +280,6 @@ class MainActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener {
         }
     }
 
-    @SuppressLint("MissingPermission")
     private fun setAlarm(id: Int) {
         if (calendar.timeInMillis < Calendar.getInstance().timeInMillis) return
         alarmManager = getSystemService(ALARM_SERVICE) as AlarmManager
@@ -384,7 +382,7 @@ class MainActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener {
             val pendingIntent = PendingIntent.getBroadcast(
                 context, -2, intent, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
             )
-            alarmManager.setInexactRepeating(
+            alarmManager.setRepeating(
                 AlarmManager.RTC,
                 calendar.timeInMillis,
 //                Debug:
