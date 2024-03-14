@@ -10,6 +10,7 @@ import android.app.PendingIntent
 import android.app.TimePickerDialog
 import android.content.Context
 import android.content.Intent
+import android.content.pm.PackageManager
 import android.graphics.Color
 import android.os.Build
 import android.view.LayoutInflater
@@ -25,6 +26,8 @@ import android.widget.Spinner
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.app.ActivityCompat
+import androidx.core.content.ContextCompat
 import androidx.core.content.ContextCompat.getString
 import androidx.core.content.ContextCompat.getSystemService
 import androidx.recyclerview.widget.RecyclerView
@@ -94,8 +97,16 @@ class RecyclerTaskAdapter(private val context: Context, private val arrTask: Arr
 
                 val spRep: Spinner = edit.findViewById(R.id.spRep)
                 spRep.setSelection(arrTask[position].rep)
-                spRep.onItemSelectedListener = object: AdapterView.OnItemSelectedListener {
-                    override fun onItemSelected(parent: AdapterView<*>?, view: View?, position: Int, id: Long) { rep = position }
+                spRep.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
+                    override fun onItemSelected(
+                        parent: AdapterView<*>?,
+                        view: View?,
+                        position: Int,
+                        id: Long
+                    ) {
+                        rep = position
+                    }
+
                     override fun onNothingSelected(parent: AdapterView<*>?) {}
                 }
 
@@ -131,6 +142,25 @@ class RecyclerTaskAdapter(private val context: Context, private val arrTask: Arr
                 }
 
                 btnSetDue.setOnClickListener {
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU)
+                        if (ContextCompat.checkSelfPermission(
+                                context, android.Manifest.permission.POST_NOTIFICATIONS
+                            ) != PackageManager.PERMISSION_GRANTED
+                        ) {
+                            ActivityCompat.requestPermissions(
+                                MainActivity(),
+                                arrayOf(android.Manifest.permission.POST_NOTIFICATIONS),
+                                101
+                            )
+                        }
+                        if (ContextCompat.checkSelfPermission(
+                                context, android.Manifest.permission.POST_NOTIFICATIONS
+                            ) != PackageManager.PERMISSION_GRANTED
+                        ) {
+                            Toast.makeText(context, "Notification Permission Required to show Reminder!", Toast.LENGTH_LONG).show()
+                            return@setOnClickListener
+                        }
+
                     showDatePicker(context)
                     if (arrTask[position].calTIM.toString() != "-1") calendar.timeInMillis =
                         arrTask[position].calTIM
@@ -177,7 +207,15 @@ class RecyclerTaskAdapter(private val context: Context, private val arrTask: Arr
                             0
                         }
                         val new =
-                            Task(arrTask[position].id, text, description, 0, calendar.timeInMillis, rep, freq)
+                            Task(
+                                arrTask[position].id,
+                                text,
+                                description,
+                                0,
+                                calendar.timeInMillis,
+                                rep,
+                                freq
+                            )
                         db.taskDao().editTask(new)
                         (context).showTasks(0)
                         deleteAlarm(arrTask[position].id, context)
@@ -220,7 +258,8 @@ class RecyclerTaskAdapter(private val context: Context, private val arrTask: Arr
 
         tick.setOnClickListener {
             if (context is MainActivity) {
-                val new = Task(arrTask[position].id,
+                val new = Task(
+                    arrTask[position].id,
                     arrTask[position].name,
                     arrTask[position].description,
                     1,
@@ -310,7 +349,10 @@ class RecyclerTaskAdapter(private val context: Context, private val arrTask: Arr
         timePickerDialog.show()
     }
 
-    init { arrTaskStatic = arrTask }
+    init {
+        arrTaskStatic = arrTask
+    }
+
     companion object {
 
         private lateinit var alarmManager: AlarmManager
