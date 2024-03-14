@@ -26,7 +26,6 @@ import android.widget.Spinner
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.app.ActivityCompat
 import androidx.core.content.ContextCompat
 import androidx.core.content.ContextCompat.getString
 import androidx.core.content.ContextCompat.getSystemService
@@ -38,7 +37,11 @@ import java.util.Locale
 
 private const val CHANNEL_ID = "Task Reminder"
 
-class RecyclerTaskAdapter(private val context: Context, private val arrTask: ArrayList<TaskModel>) :
+class RecyclerTaskAdapter(
+    private val context: Context,
+    private val arrTask: ArrayList<TaskModel>,
+    private val permissionChk: () -> Unit?
+) :
     RecyclerView.Adapter<RecyclerTaskAdapter.ViewHolder>(), DatePickerDialog.OnDateSetListener {
 
     private val db: LocalDB by lazy { LocalDB.getDB(context) }
@@ -46,6 +49,7 @@ class RecyclerTaskAdapter(private val context: Context, private val arrTask: Arr
     private lateinit var txtReminder: TextView
 
     private var dateSet = false
+
 
     inner class ViewHolder(itemView: View) : RecyclerView.ViewHolder(itemView) {
 
@@ -142,24 +146,19 @@ class RecyclerTaskAdapter(private val context: Context, private val arrTask: Arr
                 }
 
                 btnSetDue.setOnClickListener {
-                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU)
-                        if (ContextCompat.checkSelfPermission(
-                                context, android.Manifest.permission.POST_NOTIFICATIONS
-                            ) != PackageManager.PERMISSION_GRANTED
-                        ) {
-                            ActivityCompat.requestPermissions(
-                                MainActivity(),
-                                arrayOf(android.Manifest.permission.POST_NOTIFICATIONS),
-                                101
-                            )
-                        }
-                        if (ContextCompat.checkSelfPermission(
-                                context, android.Manifest.permission.POST_NOTIFICATIONS
-                            ) != PackageManager.PERMISSION_GRANTED
-                        ) {
-                            Toast.makeText(context, "Notification Permission Required to show Reminder!", Toast.LENGTH_LONG).show()
-                            return@setOnClickListener
-                        }
+                    if (!permissionChk.equals(null))
+                        permissionChk.invoke()
+                    if (ContextCompat.checkSelfPermission(
+                            context, android.Manifest.permission.POST_NOTIFICATIONS
+                        ) != PackageManager.PERMISSION_GRANTED
+                    ) {
+                        Toast.makeText(
+                            context,
+                            "Notification Permission Required to show Reminder!",
+                            Toast.LENGTH_LONG
+                        ).show()
+                        return@setOnClickListener
+                    }
 
                     showDatePicker(context)
                     if (arrTask[position].calTIM.toString() != "-1") calendar.timeInMillis =

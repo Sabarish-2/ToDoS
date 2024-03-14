@@ -1,5 +1,6 @@
 package com.example.todosapp
 
+import android.annotation.SuppressLint
 import android.app.AlarmManager
 import android.app.AlertDialog
 import android.app.DatePickerDialog
@@ -34,11 +35,15 @@ import androidx.core.content.ContextCompat
 import androidx.core.view.WindowInsetsCompat
 import androidx.recyclerview.widget.LinearLayoutManager
 import androidx.recyclerview.widget.RecyclerView
+import androidx.work.ExistingPeriodicWorkPolicy
+import androidx.work.PeriodicWorkRequestBuilder
+import androidx.work.WorkManager
 import com.google.android.material.floatingactionbutton.FloatingActionButton
 import java.text.SimpleDateFormat
 import java.util.Calendar
 import java.util.Date
 import java.util.Locale
+import java.util.concurrent.TimeUnit
 
 private const val CHANNEL_ID = "Task Reminder"
 
@@ -92,11 +97,8 @@ class MainActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener {
         }
         onBackPressedDispatcher.addCallback(onBackPressedCallback)
 
-
-
         createNotChannel()
     }
-
 
 
     override fun onResume() {
@@ -107,7 +109,7 @@ class MainActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener {
     fun showTasks(taskStatus: Int) {
         val arrTask = ArrayList<TaskModel>()
         recyclerView = findViewById(R.id.recyclerView)
-        recyclerAdapter = RecyclerTaskAdapter(this, arrTask)
+        recyclerAdapter = RecyclerTaskAdapter(this, arrTask) { reqPermission() }
         recyclerView.layoutManager = LinearLayoutManager(this)
         recyclerView.adapter = recyclerAdapter
         val task = db.taskDao().allTask
@@ -116,8 +118,7 @@ class MainActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener {
                 arrTask.add(
                     TaskModel(R.drawable.no_tick_box, i.name, i.description, i.id, i.calTIM, i.rep, i.freq)
                 )
-                if (i.calTIM != -1L)
-                {
+                if (i.calTIM != -1L) {
                     calendar = Calendar.getInstance()
                     calendar.timeInMillis = i.calTIM
                     setAlarm(i.id)
@@ -214,7 +215,7 @@ class MainActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener {
         val spRep = add.findViewById<Spinner>(R.id.spRep)
 
         rep = 0
-        spRep.onItemSelectedListener = object: AdapterView.OnItemSelectedListener{
+        spRep.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
             override fun onItemSelected(
                 parent: AdapterView<*>?,
                 view: View?,
@@ -235,17 +236,18 @@ class MainActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener {
 
 
         btnSetDue.setOnClickListener {
-            if (Build.VERSION.SDK_INT >= VERSION_CODES.TIRAMISU) {
-                if (ContextCompat.checkSelfPermission(
-                        this, android.Manifest.permission.POST_NOTIFICATIONS
-                    ) != PackageManager.PERMISSION_GRANTED
-                ) {
-                    ActivityCompat.requestPermissions(
-                        this, arrayOf(android.Manifest.permission.POST_NOTIFICATIONS), 101
-                    )
-                }
-            }
-            showDatePicker()
+            reqPermission()
+            if (ContextCompat.checkSelfPermission(
+                    this, android.Manifest.permission.POST_NOTIFICATIONS
+                ) != PackageManager.PERMISSION_GRANTED
+            ) {
+                Toast.makeText(
+                    this,
+                    "Notification Permission Required to show Reminder!",
+                    Toast.LENGTH_LONG
+                ).show()
+            } else
+                showDatePicker()
         }
 
         btnAddDialog.setOnClickListener {
@@ -280,6 +282,41 @@ class MainActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener {
         }
     }
 
+    private fun reqPermission() {
+        if (Build.VERSION.SDK_INT >= VERSION_CODES.TIRAMISU)
+            if (ContextCompat.checkSelfPermission(
+                    this, android.Manifest.permission.POST_NOTIFICATIONS
+                ) != PackageManager.PERMISSION_GRANTED
+            ) {
+                ActivityCompat.requestPermissions(
+                    this,
+                    arrayOf(android.Manifest.permission.POST_NOTIFICATIONS),
+                    101
+                )
+            }
+    }
+
+    override fun onRequestPermissionsResult(
+        requestCode: Int,
+        permissions: Array<String>,
+        grantResults: IntArray
+    ) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults)
+
+        if (Build.VERSION.SDK_INT >= VERSION_CODES.TIRAMISU)
+            if (ContextCompat.checkSelfPermission(
+                    this, android.Manifest.permission.POST_NOTIFICATIONS
+                ) != PackageManager.PERMISSION_GRANTED
+            )
+            // Permission is denied, handle it accordingly (e.g., show a message to the user)
+                Toast.makeText(
+                    this,
+                    "Notification permission required to show reminder!",
+                    Toast.LENGTH_LONG
+                ).show()
+    }
+
+    @SuppressLint("MissingPermission")
     private fun setAlarm(id: Int) {
         if (calendar.timeInMillis < Calendar.getInstance().timeInMillis) return
         alarmManager = getSystemService(ALARM_SERVICE) as AlarmManager
@@ -369,26 +406,32 @@ class MainActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener {
 
     companion object {
         fun repeatCheck(context: Context)  {
-            val workRequest = PeriodicworkRequestBuilder<Customworker>(
 
-            repeatInterval = 24,
-
-            repeatIntervalTimeUnit = TimeUnit.HOURS,
+            val workRequest = PeriodicWorkRequestBuilder<DailyWorker>(
+            repeatInterval = 1,
+            repeatIntervalTimeUnit = TimeUnit.DAYS,
             flexTimeInterval = 30,
             flexTimeIntervalUnit = TimeUnit.MINUTES
+            )
+                .setInitialDelay(initialDelay(), TimeUnit.MILLISECONDS)
+                .build()
 
-            ).setBackoffCriteria(
+            val workManager = WorkManager.getInstance(context)
+            workManager.enqueueUniquePeriodicWork("DailyWork", ExistingPeriodicWorkPolicy.KEEP,workRequest)
+        }
 
-            backoffPolicy = BackoffPolicy.LINEAR,
-
-            duration - Duration.ofSeconds (seconds: 15)
-
-            ).build()
-
-            val workManager = WorkManager.getInstance(applicationContext) 
-            workManager.enqueueUniquePeriodicWork("DailyWork",
-            ExistingPeriodicWorkPolicy.KEEP
-            ,workRequest)
+        private fun initialDelay(): Long {
+            val now = Calendar.getInstance()
+            val targetTime = Calendar.getInstance().apply {
+                set(Calendar.HOUR_OF_DAY, 1)
+                set(Calendar.MINUTE, 0)
+                set(Calendar.SECOND, 0)
+                set(Calendar.MILLISECOND, 0)
+                if (now.after(this)) {
+                    add(Calendar.DAY_OF_MONTH, 1) // If it's already past 1 o'clock, schedule for the next day
+                }
+            }
+            return targetTime.timeInMillis - now.timeInMillis
         }
     }
 

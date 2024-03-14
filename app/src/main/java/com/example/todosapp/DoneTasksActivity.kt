@@ -34,7 +34,7 @@ class DoneTasksActivity : AppCompatActivity() {
     fun showTasks(taskStatus: Int) {
         val arrTask = ArrayList<TaskModel>()
         recyclerView = findViewById(R.id.recyclerView)
-        recyclerAdapter = RecyclerTaskAdapter(this, arrTask)
+        recyclerAdapter = RecyclerTaskAdapter(this, arrTask) { }
         recyclerView.layoutManager = LinearLayoutManager(this)
         recyclerView.adapter = recyclerAdapter
         val task = db.taskDao().allTask
