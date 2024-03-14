@@ -369,27 +369,26 @@ class MainActivity : AppCompatActivity(), DatePickerDialog.OnDateSetListener {
 
     companion object {
         fun repeatCheck(context: Context)  {
-            val calendar = Calendar.getInstance().apply {
-                timeInMillis = System.currentTimeMillis()
-                set(Calendar.HOUR_OF_DAY, 0)
-                set(Calendar.MINUTE, 30)
-            }
+            val workRequest = PeriodicworkRequestBuilder<Customworker>(
 
-            val alarmManager = context.getSystemService(ALARM_SERVICE) as AlarmManager
-            val intent = Intent(context, MyBroadcastReceiver::class.java).apply {
-                putExtra("id", -2)
-            }
-            val pendingIntent = PendingIntent.getBroadcast(
-                context, -2, intent, PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
-            )
-            alarmManager.setRepeating(
-                AlarmManager.RTC,
-                calendar.timeInMillis,
-//                Debug:
-//                60000,
-                AlarmManager.INTERVAL_DAY,
-                pendingIntent
-            )
+            repeatInterval = 24,
+
+            repeatIntervalTimeUnit = TimeUnit.HOURS,
+            flexTimeInterval = 30,
+            flexTimeIntervalUnit = TimeUnit.MINUTES
+
+            ).setBackoffCriteria(
+
+            backoffPolicy = BackoffPolicy.LINEAR,
+
+            duration - Duration.ofSeconds (seconds: 15)
+
+            ).build()
+
+            val workManager = WorkManager.getInstance(applicationContext) 
+            workManager.enqueueUniquePeriodicWork("DailyWork",
+            ExistingPeriodicWorkPolicy.KEEP
+            ,workRequest)
         }
     }
 
